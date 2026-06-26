@@ -1,0 +1,111 @@
+"filename", "language", "JSON", "JSON with Comments", "TypeScript", "Markdown", "PostCSS", "HTML", "TypeScript JSX", "Dotenv", "JavaScript", "XML", "C#", "Properties", "comment", "blank", "total"
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\.vs\backend\v18\DocumentLayout.backup.json", "JSON", 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\.vs\backend\v18\DocumentLayout.json", "JSON", 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Controllers\AuthController.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 77, 0, 1, 18, 96
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Controllers\CommentController.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 111, 0, 0, 15, 126
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Controllers\ConversationsController.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 0, 0, 28, 155
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Controllers\FollowController.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 164, 0, 2, 37, 203
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Controllers\LikesController.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 15, 79
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Controllers\NotificationsController.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 0, 0, 4, 49
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Controllers\PostController.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 148, 0, 0, 22, 170
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Controllers\UserController.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 101, 0, 0, 13, 114
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\CommentDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 1, 0, 8
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\CommentResponseDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 12
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\LikeDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 7
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\LoginDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 2, 13
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\PostDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 8
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\PostResponseDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 16
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\RegisterDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 3, 19
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\SendMessageDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 1, 8
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\DTOs\UpdateProfileDto.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 8
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Data\AppDbContext.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 39, 0, 3, 10, 52
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Helpers\GetUserId.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 3, 20
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Migrations\20260625210115_InitialCreate.Designer.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 298, 0, 2, 114, 414
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Migrations\20260625210115_InitialCreate.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 276, 0, 3, 30, 309
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Migrations\AppDbContextModelSnapshot.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 296, 0, 1, 114, 411
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Models\Comment.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 2, 15
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Models\Conversation.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 5, 18
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Models\Follow.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 2, 15
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Models\Like.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 2, 14
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Models\Message.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 5, 19
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Models\Notification.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 1, 14
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Models\Post.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 2, 17
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Models\User.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 2, 21
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Program.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62, 0, 6, 14, 82
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\Properties\launchSettings.json", "JSON", 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 24
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\appsettings.Development.json", "JSON", 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\appsettings.json", "JSON", 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\backend.csproj", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 4, 26
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\bin\Debug\net10.0\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json", "JSON", 171, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 171
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\bin\Debug\net10.0\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json", "JSON", 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\bin\Debug\net10.0\appsettings.Development.json", "JSON", 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\bin\Debug\net10.0\appsettings.json", "JSON", 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\bin\Debug\net10.0\backend.deps.json", "JSON", 955, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 955
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\bin\Debug\net10.0\backend.runtimeconfig.json", "JSON", 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\bin\Debug\net10.0\backend.staticwebassets.endpoints.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\.NETCoreApp,Version=v10.0.AssemblyAttributes.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 1, 5
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\backend.AssemblyInfo.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 5, 25
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\backend.GeneratedMSBuildEditorConfig.editorconfig", "Properties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 1, 33
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\backend.GlobalUsings.g.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 1, 1, 18
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\backend.MvcApplicationPartsAssemblyInfo.cs", "C#", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 9, 5, 18
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\backend.sourcelink.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\rjsmrazor.dswa.cache.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\rpswa.dswa.cache.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\staticwebassets.build.endpoints.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\Debug\net10.0\staticwebassets.build.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\backend.csproj.nuget.dgspec.json", "JSON", 532, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 532
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\backend.csproj.nuget.g.props", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 27
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\backend.csproj.nuget.g.targets", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 9
+"c:\Users\Diar\Desktop\theodin\SocialMedia\backend\obj\project.assets.json", "JSON", 3564, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3564
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-06-56\details.md", "Markdown", 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 55
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-06-56\diff-details.md", "Markdown", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 15
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-06-56\diff.md", "Markdown", 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 19
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-06-56\results.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-06-56\results.md", "Markdown", 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 40
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-07-34\details.md", "Markdown", 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 55
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-07-34\diff-details.md", "Markdown", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 15
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-07-34\diff.md", "Markdown", 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 19
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-07-34\results.json", "JSON", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.VSCodeCounter\2026-06-25_23-07-34\results.md", "Markdown", 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 40
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\.env", "Dotenv", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\README.md", "Markdown", 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 74
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\eslint.config.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 2, 23
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\index.html", "HTML", 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 1, 14
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\package-lock.json", "JSON", 3501, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3502
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\package.json", "JSON", 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 38
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\public\favicon.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\public\icons.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 1, 25
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\Api.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 6, 19
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\App.css", "PostCSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\App.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 102, 0, 0, 0, 0, 0, 1, 4, 107
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\assets\react.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\assets\vite.svg", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 2
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\components\Layout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 2, 14
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\components\Navbar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 121, 0, 0, 0, 0, 0, 0, 13, 134
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\context\AuthContext.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 2, 5
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\context\AuthProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 8, 46
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\context\useAuth.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 4, 13
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\helpers\ProtectedRoutes.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 5, 20
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\index.css", "PostCSS", 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 5
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\main.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 3, 16
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\AddFriends.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 8, 93
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\FollowRequests.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 69, 0, 0, 0, 0, 0, 0, 7, 76
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\Followers.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 7, 70
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\Following.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 62, 0, 0, 0, 0, 0, 0, 8, 70
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\Home.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 446, 0, 0, 0, 0, 0, 2, 24, 472
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\Login.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 88, 0, 0, 0, 0, 0, 0, 8, 96
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\Messages.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 222, 0, 0, 0, 0, 0, 0, 22, 244
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\Notifications.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 1, 8, 72
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\Profile.tsx.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 179, 0, 0, 0, 0, 0, 0, 16, 195
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\Register.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 9, 109
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\pages\UserProfiles.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 117, 0, 0, 0, 0, 0, 1, 11, 129
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\types\Auth.ts", "TypeScript", 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 18
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\types\Follow.ts", "TypeScript", 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 20
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\types\Home.ts", "TypeScript", 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 22
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\src\types\UserProfile.ts", "TypeScript", 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\tsconfig.app.json", "JSON", 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 26
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\tsconfig.json", "JSON with Comments", 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\tsconfig.node.json", "JSON", 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 25
+"c:\Users\Diar\Desktop\theodin\SocialMedia\frontend\vite.config.ts", "TypeScript", 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 8
+"Total", "-", 8951, 7, 72, 266, 2, 13, 1820, 1, 21, 85, 2062, 32, 50, 751, 14133

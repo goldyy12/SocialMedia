@@ -403,9 +403,9 @@ export default function Home() {
         )}
       </div>
 
-      {/* RIGHT — sidebar */}
+      
       <div className="w-72 shrink-0 hidden lg:block">
-        {/* search */}
+        
         <div className="relative mb-6">
           <input
             type="text"
@@ -435,7 +435,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* who to follow */}
+        
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <p className="text-sm font-medium text-gray-900 mb-3">
             Who to follow
