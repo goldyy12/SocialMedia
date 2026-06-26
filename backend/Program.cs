@@ -50,7 +50,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("https://social-media-tau-eight.vercel.app")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 var cloudinaryConfig = builder.Configuration.GetSection("Cloudinary");
