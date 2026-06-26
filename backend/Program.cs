@@ -46,12 +46,11 @@ builder.Services.AddAuthorization();
 // CORS — allow React frontend
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReact", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("https://social-media-tau-eight.vercel.app")
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 var cloudinaryConfig = builder.Configuration.GetSection("Cloudinary");
