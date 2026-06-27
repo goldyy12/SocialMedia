@@ -164,6 +164,10 @@ export default function Home() {
     }
     addCommentMutation.mutate({ postId, commentText });
   };
+  function optimizeCloudinaryUrl(url: string, width = 700): string {
+    if (!url?.includes("res.cloudinary.com")) return url;
+    return url.replace("/upload/", `/upload/w_${width},f_auto,q_auto/`);
+  }
 
   if (isLoading)
     return <p className="text-center mt-8 text-gray-500">Loading...</p>;
@@ -179,13 +183,12 @@ export default function Home() {
           <h1 className="text-2xl font-bold">Feed</h1>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
           >
             {showForm ? "Cancel" : "New Post"}
           </button>
         </div>
 
-        {/* post form */}
         {showForm && (
           <div className="bg-white p-4 rounded-lg shadow mb-6">
             <textarea
@@ -252,7 +255,10 @@ export default function Home() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <img
-                    src={post.profilePic || "/default-avatar.png"}
+                    src={optimizeCloudinaryUrl(post.profilePic || "", 80)} // Passes "" if null
+                    width={32}
+                    height={32}
+                    alt={`${user?.username || "User"}'s avatar`}
                     className="w-8 h-8 rounded-full"
                   />
                   <span className="font-medium">
@@ -333,10 +339,16 @@ export default function Home() {
                   <>
                     <p className="mb-2">{post.content}</p>
                     {post.imageUrl && (
-                      <img
-                        src={post.imageUrl}
-                        className="rounded-lg w-full object-cover max-h-64 mb-2"
-                      />
+                      <div
+                        className="relative w-full mb-2"
+                        style={{ aspectRatio: "16/9" }}
+                      >
+                        <img
+                          src={optimizeCloudinaryUrl(post.imageUrl)}
+                          alt={`Post by ${post.username}`}
+                          className="rounded-lg w-full h-full object-cover"
+                        />
+                      </div>
                     )}
                   </>
                 )}
@@ -403,9 +415,7 @@ export default function Home() {
         )}
       </div>
 
-      
       <div className="w-72 shrink-0 hidden lg:block">
-        
         <div className="relative mb-6">
           <input
             type="text"
@@ -435,7 +445,6 @@ export default function Home() {
           )}
         </div>
 
-        
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <p className="text-sm font-medium text-gray-900 mb-3">
             Who to follow

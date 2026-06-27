@@ -102,12 +102,10 @@ export default function Messages() {
 
   if (isLoading) return <p className="text-center mt-8">Loading...</p>;
 
-  // on mobile show chat view when conversation selected
   const showChat = !!selectedConversationId;
 
   return (
     <div className="h-[calc(100vh-56px)] flex">
-      {/* LEFT — conversation list, hidden on mobile when chat is open */}
       <div
         className={`${showChat ? "hidden md:flex" : "flex"} w-full md:w-72 flex-col border-r border-gray-100 bg-white`}
       >
@@ -140,7 +138,6 @@ export default function Messages() {
             </div>
           )}
 
-          {/* recent conversations */}
           <div>
             <p className="text-xs text-gray-400 mb-2">Recent</p>
             {conversations.length === 0 ? (
@@ -184,13 +181,11 @@ export default function Messages() {
         </div>
       </div>
 
-      {/* RIGHT — chat window */}
       <div
         className={`${showChat ? "flex" : "hidden md:flex"} flex-1 flex-col bg-white`}
       >
         {selectedConversation ? (
           <>
-            {/* header with back button on mobile */}
             <div className="flex items-center gap-3 p-4 border-b border-gray-100">
               <button
                 onClick={() => setSelectedConversationId(null)}
@@ -210,7 +205,6 @@ export default function Messages() {
               </p>
             </div>
 
-            {/* messages */}
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
               {messages.map((msg) => {
                 const isMe = msg.senderId === Number(user?.userId);

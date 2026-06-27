@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://social-media-tau-eight.vercel.app/sitemap.xml
