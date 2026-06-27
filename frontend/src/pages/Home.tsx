@@ -349,6 +349,7 @@ export default function Home() {
                       >
                         <img
                           src={optimizeCloudinaryUrl(post.imageUrl)}
+                          fetchPriority="high"
                           alt={`Post by ${post.username}`}
                           className="rounded-lg w-full h-full object-cover"
                         />
