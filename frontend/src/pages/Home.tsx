@@ -255,11 +255,15 @@ export default function Home() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <img
-                    src={optimizeCloudinaryUrl(post.profilePic || "", 80)} // Passes "" if null
+                    src={
+                      post.profilePic
+                        ? optimizeCloudinaryUrl(post.profilePic, 80)
+                        : "/default-avatar.png"
+                    }
                     width={32}
                     height={32}
-                    alt={`${user?.username || "User"}'s avatar`}
-                    className="w-8 h-8 rounded-full"
+                    alt={`${post.username}'s avatar`}
+                    className="w-8 h-8 rounded-full object-cover"
                   />
                   <span className="font-medium">
                     <a href={`/user/${post.userId}`}>{post.username}</a>
