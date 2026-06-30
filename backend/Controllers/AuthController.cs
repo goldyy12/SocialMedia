@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace backend.Controllers
 {
@@ -17,13 +18,14 @@ namespace backend.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _context;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IConfiguration configuration, AppDbContext context)
+        public AuthController(IConfiguration configuration, AppDbContext context, ILogger<AuthController> logger)
         {
             _configuration = configuration;
             _context = context;
+            _logger = logger;
         }
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
@@ -34,7 +36,8 @@ namespace backend.Controllers
 
             if (userExists)
             {
-                return BadRequest("Username or Email is already in use.");
+                _logger.LogWarning("Registration attempt failed — duplicate user for {Email}", dto.Email);
+                return BadRequest(new { error = "Username or Email is already in use." });
             }
 
             
@@ -49,6 +52,7 @@ namespace backend.Controllers
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("User registered {UserId} {Username}", user.Id, user.Username);
 
             return Ok("User registered successfully.");
         }
@@ -60,9 +64,12 @@ namespace backend.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower());
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             {
-                return Unauthorized("Invalid username or password");
+                _logger.LogWarning("Failed login attempt for {Email}", dto.Email);
+                return Unauthorized(new { error = "Invalid username or password" });
             }
 
+            // Login — JWT config missing
+            
 
             var claims = new[]
 {
@@ -73,7 +80,7 @@ namespace backend.Controllers
             var jwtKey = _configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(jwtKey))
             {
-                return StatusCode(500, "JWT Secret Key is not configured on the server.");
+                return StatusCode(500, new { error = "JWT Secret Key is not configured on the server." });
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
@@ -89,6 +96,7 @@ namespace backend.Controllers
             );
 
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            _logger.LogInformation("User {UserId} logged in successfully", user.Id);
 
             return Ok(new { token = jwt });
         }

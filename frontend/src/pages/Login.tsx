@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import api from "../Api";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
+  const [isError, setIsError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -27,6 +29,13 @@ export default function Login() {
       navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
+      if (axios.isAxiosError(error)) {
+        setIsError(
+          error.response?.data?.error ?? "Login failed. Please try again.",
+        );
+      } else {
+        setIsError("Login failed. Please try again.");
+      }
     }
   };
 
@@ -80,6 +89,11 @@ export default function Login() {
         >
           Login
         </button>
+        {isError && (
+          <p className="text-sm text-red-500 dark:text-red-400 mt-4 text-center bg-red-50 dark:bg-red-950/30 py-2 rounded-lg">
+            {isError}
+          </p>
+        )}
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
           Don't have an account?{" "}
           <a

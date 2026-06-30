@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../Api";
 import type { Post, Comment } from "../types/Home";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,8 @@ export default function Home() {
   const [editContent, setEditContent] = useState("");
   const [openMenuPostId, setOpenMenuPostId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [commentText, setCommentText] = useState<{ [key: number]: string }>({});
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
   const toggleComments = (postId: number) => {
     setExpandedPosts((prev) => {
@@ -38,6 +40,10 @@ export default function Home() {
       return next;
     });
   };
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const {
     data: posts = [],
@@ -63,15 +69,15 @@ export default function Home() {
         ...prev,
       ]);
       setContent("");
-      setImageFile(null); // 👈 reset
-      setImagePreview(null); // 👈 reset
+      setImageFile(null);
+      setImagePreview(null);
       setShowForm(false);
     },
   });
   const { data: searchedUsers = [] } = useQuery<SearchUser[]>({
-    queryKey: ["searchedUsers"],
-    queryFn: () => searchUsers(searchQuery),
-    enabled: searchQuery.length > 0,
+    queryKey: ["searchedUsers", debouncedSearchQuery],
+    queryFn: () => searchUsers(debouncedSearchQuery),
+    enabled: debouncedSearchQuery.length > 0,
   });
   const toggleLikeMutation = useMutation({
     mutationFn: (post: Post) =>
@@ -79,6 +85,8 @@ export default function Home() {
         ? api.delete(`/like/${post.id}`)
         : api.post(`/like/${post.id}`),
     onMutate: (post) => {
+      const previousPosts = queryClient.getQueryData<Post[]>(["posts"]);
+
       queryClient.setQueryData<Post[]>(["posts"], (prev = []) =>
         prev.map((p) =>
           p.id === post.id
@@ -92,6 +100,11 @@ export default function Home() {
             : p,
         ),
       );
+
+      return { previousPosts };
+    },
+    onError: (err, post, context) => {
+      queryClient.setQueryData(["posts"], context?.previousPosts);
     },
   });
 
@@ -367,14 +380,19 @@ export default function Home() {
 
                 <div className="mt-4">
                   <input
-                    type="text"
-                    placeholder="Write a comment..."
-                    className="border rounded p-2 w-full text-sm"
+                    value={commentText[post.id] || ""}
+                    placeholder="Add a comment..."
+                    className="w-full border rounded p-2 text-sm"
+                    onChange={(e) =>
+                      setCommentText((prev) => ({
+                        ...prev,
+                        [post.id]: e.target.value,
+                      }))
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        const input = e.target as HTMLInputElement;
-                        handleAddComment(post.id, input.value);
-                        input.value = "";
+                        handleAddComment(post.id, commentText[post.id] || "");
+                        setCommentText((prev) => ({ ...prev, [post.id]: "" }));
                       }
                     }}
                   />

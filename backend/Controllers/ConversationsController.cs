@@ -1,11 +1,14 @@
 ﻿using backend.Data;
+using backend.DTOs;
 using backend.Helpers;
+using backend.Hubs;
 using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using backend.DTOs;
+using System.IdentityModel.Tokens.Jwt;
 
 
 namespace backend.Controllers
@@ -16,10 +19,12 @@ namespace backend.Controllers
     public class ConversationsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<ChatHub> _hubContext; 
 
-        public ConversationsController(AppDbContext context)
+        public ConversationsController(AppDbContext context, IHubContext<ChatHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         [HttpPost("{userId2}")]
@@ -138,15 +143,33 @@ namespace backend.Controllers
 
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
+            var senderInfo = await _context.Users
+        .Where(u => u.Id == userId.Value)
+        .Select(u => new { u.Username, u.ProfilePic })
+        .FirstOrDefaultAsync();
 
-            return Ok(new
+            // 2. Build a single payload object used for both SignalR and the HTTP Response
+            var wsPayload = new
             {
                 message.Id,
+                message.ConversationId,
                 message.Content,
                 message.CreatedAt,
                 message.SenderId,
-                message.IsRead
-            });
+                message.IsRead,
+                SenderUsername = senderInfo?.Username,
+                SenderProfilePic = senderInfo?.ProfilePic
+            };
+
+            // 3. Find out who the recipient is
+            int recipientId = conversation.User1Id == userId.Value ? conversation.User2Id : conversation.User1Id;
+
+            // 4. Broadcast the payload via SignalR to both individual rooms
+            await _hubContext.Clients.Group(userId.Value.ToString()).SendAsync("ReceiveMessage", wsPayload);
+            await _hubContext.Clients.Group(recipientId.ToString()).SendAsync("ReceiveMessage", wsPayload);
+
+            // 5. Return the payload as the final HTTP response
+            return Ok(wsPayload);
         }
 
     }

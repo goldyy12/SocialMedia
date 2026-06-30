@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import api from "../Api";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -19,7 +20,14 @@ export default function Register() {
       navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);
-      setIsError("Registration failed. Please try again.");
+      if (axios.isAxiosError(error)) {
+        setIsError(
+          error.response?.data?.error ??
+            "Registration failed. Please try again.",
+        );
+      } else {
+        setIsError("Registration failed. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }

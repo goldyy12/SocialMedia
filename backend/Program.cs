@@ -3,6 +3,7 @@ using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,13 +43,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 builder.Services.AddAuthorization();
+builder.Host.UseSerilog((context, config) =>
+{
+    config.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter())
+          .Enrich.FromLogContext();
+});
+
 
 // CORS — allow React frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://social-media-tau-eight.vercel.app")
+        policy.WithOrigins("https://social-media-tau-eight.vercel.app", "http://localhost:5173")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -76,6 +83,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
+app.UseSerilogRequestLogging();
 
 
 app.UseHttpsRedirection();
