@@ -103,7 +103,7 @@ export default function Home() {
 
       return { previousPosts };
     },
-    onError: (err, post, context) => {
+    onError: (context) => {
       queryClient.setQueryData(["posts"], context?.previousPosts);
     },
   });
