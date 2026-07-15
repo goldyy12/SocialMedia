@@ -103,9 +103,11 @@ export default function Home() {
 
       return { previousPosts };
     },
-    onError: (context) => {
-      queryClient.setQueryData(["posts"], context?.previousPosts);
-    },
+    //  Correct parameter order (using underscores to skip unused inputs)
+onError: (_err, _variables, context) => {
+  queryClient.setQueryData(["posts"], context?.previousPosts);
+},
+
   });
 
   const deletePostMutation = useMutation({
