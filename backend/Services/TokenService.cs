@@ -16,10 +16,12 @@ public class TokenService
     public string GenerateAccessToken(User user)
     {
         var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-        };
+{
+    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+    new Claim("userId", user.Id.ToString()),
+    new Claim("username", user.Username),
+    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+};
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
