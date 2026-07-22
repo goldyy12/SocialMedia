@@ -1,4 +1,4 @@
-﻿using backend.Data;
+using backend.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
@@ -118,9 +118,7 @@ namespace backend.Controllers
                 return Unauthorized(new { error = "User no longer exists." });
             }
 
-            // Rotate: remove the old refresh token, issue a new one
-            _context.RefreshTokens.Remove(tokenEntity);
-
+            // Generate new tokens first
             var newAccessToken = _tokenService.GenerateAccessToken(user);
             var newRawRefreshToken = _tokenService.GenerateRefreshToken();
             var newHashedToken = _tokenService.HashToken(newRawRefreshToken);
@@ -132,7 +130,12 @@ namespace backend.Controllers
                 ExpiresAt = DateTime.UtcNow.AddDays(7)
             };
 
+            // Add new token and save BEFORE removing old token
             _context.RefreshTokens.Add(newRefreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            // Now remove the old refresh token (after new one is safely saved)
+            _context.RefreshTokens.Remove(tokenEntity);
             await _context.SaveChangesAsync();
 
             Response.Cookies.Append("refreshToken", newRawRefreshToken, new CookieOptions
