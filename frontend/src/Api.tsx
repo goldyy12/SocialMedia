@@ -7,34 +7,13 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
-
-let refreshPromise: Promise<string> | null = null;
-
-async function refreshAccessToken(): Promise<string> {
-  if (!refreshPromise) {
-    refreshPromise = axios
-      .post(
-        import.meta.env.VITE_API_URL + "/api/auth/refresh",
-        {},
-        { withCredentials: true },
-      )
-      .then((res) => {
-        const newToken = res.data.accessToken;
-        localStorage.setItem("token", newToken);
-        return newToken;
-      })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-  return refreshPromise;
-}
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -49,8 +28,16 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const newToken = await refreshAccessToken();
+        const refreshResponse = await axios.post(
+          import.meta.env.VITE_API_URL + "/api/auth/refresh",
+          {},
+          { withCredentials: true },
+        );
+        const newToken = refreshResponse.data.accessToken;
+
+        localStorage.setItem("token", newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
