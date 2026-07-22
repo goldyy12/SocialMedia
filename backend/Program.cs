@@ -1,11 +1,13 @@
 using backend.Data;
 using backend.Hubs;
+using backend.Services;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
+using backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +72,7 @@ var account = new Account(
 );
 var cloudinary = new Cloudinary(account);
 builder.Services.AddSingleton(cloudinary);
+builder.Services.AddScoped<TokenService>();
 
 var app = builder.Build();
 
