@@ -14,4 +14,5 @@ export interface AuthContextType {
   login: (token: string) => void;
   logout: () => void;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  loading: boolean;
 }

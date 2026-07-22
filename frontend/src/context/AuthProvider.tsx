@@ -35,6 +35,7 @@ export default function AuthProvider({
   children: React.ReactNode;
 }) {
   const [user, setUser] = useState<User | null>(getUserFromToken);
+  const [loading, setLoading] = useState<boolean>(() => !getUserFromToken());
 
   const login = (token: string) => {
     localStorage.setItem("token", token);
@@ -65,9 +66,12 @@ export default function AuthProvider({
         })
         .catch((error) => {
           console.error("Failed to refresh token:", error);
-          // no valid refresh cookie either — genuinely logged out
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
+    // no else branch needed — if user exists, loading was already initialized to false
   }, []);
 
   const logout = async () => {
@@ -85,7 +89,7 @@ export default function AuthProvider({
     }
   };
 
-  const value: AuthContextType = { user, login, logout, setUser };
+  const value: AuthContextType = { user, login, logout, setUser, loading };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
