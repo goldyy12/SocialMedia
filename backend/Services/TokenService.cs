@@ -30,7 +30,7 @@ public class TokenService
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(15), 
+            expires: DateTime.UtcNow.AddSeconds(10),  // Testing: 10 seconds (change to AddMinutes(15) for production)
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
