@@ -36,8 +36,10 @@ export default function Login() {
         setIsError(
           error.response?.data?.error ?? "Login failed. Please try again.",
         );
+        setPending(false);
       } else {
         setIsError("Login failed. Please try again.");
+        setPending(false);
       }
     }
   };
