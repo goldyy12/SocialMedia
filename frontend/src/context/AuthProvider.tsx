@@ -23,8 +23,8 @@ function getUserFromToken() {
       username: decoded.username,
       email: decoded.email,
     };
-  } catch {
-    localStorage.removeItem("token");
+  } catch (error) {
+    console.error("Failed to decode token:", error);
     return null;
   }
 }
@@ -63,7 +63,8 @@ export default function AuthProvider({
             email: decoded.email,
           });
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error("Failed to refresh token:", error);
           // no valid refresh cookie either — genuinely logged out
         });
     }
