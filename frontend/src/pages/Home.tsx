@@ -10,7 +10,7 @@ async function fetchPosts(): Promise<Post[]> {
   return response.data;
 }
 async function searchUsers(query: string): Promise<SearchUser[]> {
-  const response = await api.get(`/user/search?query=${query}`); // 👈 q= → query=
+  const response = await api.get(`/user/search?query=${query}`);
   return response.data;
 }
 
@@ -58,7 +58,7 @@ export default function Home() {
     mutationFn: async () => {
       let imageUrl = null;
       if (imageFile) {
-        imageUrl = await uploadImage(imageFile); // 👈 upload first, then post
+        imageUrl = await uploadImage(imageFile);
       }
       return api.post("/post", { content, imageUrl });
     },

@@ -1,14 +1,9 @@
 ﻿using backend.Data;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
 using backend.DTOs;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Logging;
+using backend.Services; // fixed: was backend.Service
 
 namespace backend.Controllers
 {
@@ -19,17 +14,23 @@ namespace backend.Controllers
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _context;
         private readonly ILogger<AuthController> _logger;
+        private readonly TokenService _tokenService; // fixed: named field
 
-        public AuthController(IConfiguration configuration, AppDbContext context, ILogger<AuthController> logger)
+        public AuthController(
+            IConfiguration configuration,
+            AppDbContext context,
+            ILogger<AuthController> logger,
+            TokenService tokenService) // fixed: injected
         {
             _configuration = configuration;
             _context = context;
             _logger = logger;
+            _tokenService = tokenService;
         }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            
             bool userExists = await _context.Users.AnyAsync(u =>
                 u.Email.ToLower() == dto.Email.ToLower() ||
                 u.Username.ToLower() == dto.Username.ToLower());
@@ -40,7 +41,6 @@ namespace backend.Controllers
                 return BadRequest(new { error = "Username or Email is already in use." });
             }
 
-            
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
             var user = new User
@@ -60,7 +60,6 @@ namespace backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            // 1. Find user and verify credentials
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower());
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             {
@@ -68,37 +67,52 @@ namespace backend.Controllers
                 return Unauthorized(new { error = "Invalid username or password" });
             }
 
-            // Login — JWT config missing
-            
 
-            var claims = new[]
-{
-    new Claim("userId", user.Id.ToString()),
-    new Claim("username", user.Username),
-    new Claim("email", user.Email),
-};
-            var jwtKey = _configuration["Jwt:Key"];
-            if (string.IsNullOrEmpty(jwtKey))
+            var accessToken = _tokenService.GenerateAccessToken(user);
+            var rawRefreshToken = _tokenService.GenerateRefreshToken();
+            var hashedToken = _tokenService.HashToken(rawRefreshToken);
+
+            var refreshTokenEntity = new RefreshToken
             {
-                return StatusCode(500, new { error = "JWT Secret Key is not configured on the server." });
-            }
+                UserId = user.Id,
+                TokenHash = hashedToken,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            _context.RefreshTokens.Add(refreshTokenEntity);
+            await _context.SaveChangesAsync();
 
-            
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(1),
-                signingCredentials: creds
-            );
+            Response.Cookies.Append("refreshToken", rawRefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = refreshTokenEntity.ExpiresAt
+            });
 
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
             _logger.LogInformation("User {UserId} logged in successfully", user.Id);
 
-            return Ok(new { token = jwt });
+            return Ok(new { accessToken });
+        }
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var refreshTokenCookie = Request.Cookies["refreshToken"];
+            if (!string.IsNullOrEmpty(refreshTokenCookie))
+            {
+                var hashedToken = _tokenService.HashToken(refreshTokenCookie);
+                var tokenEntity = await _context.RefreshTokens
+                    .FirstOrDefaultAsync(rt => rt.TokenHash == hashedToken);
+
+                if (tokenEntity != null)
+                {
+                    _context.RefreshTokens.Remove(tokenEntity);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            Response.Cookies.Delete("refreshToken");
+            return Ok();
         }
     }
 }

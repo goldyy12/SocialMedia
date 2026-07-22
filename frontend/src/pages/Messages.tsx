@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../Api";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/useAuth";
+import * as signalR from "@microsoft/signalr";
 
 interface Conversation {
   id: number;
@@ -30,6 +31,7 @@ interface Message {
   createdAt: string;
   senderId: number;
   isRead: boolean;
+  conversationId: number;
 }
 
 async function fetchConversations(): Promise<Conversation[]> {
@@ -70,7 +72,6 @@ export default function Messages() {
     queryKey: ["messages", selectedConversationId],
     queryFn: () => fetchMessages(selectedConversationId!),
     enabled: !!selectedConversationId,
-    refetchInterval: 3000,
   });
 
   useEffect(() => {
@@ -82,6 +83,42 @@ export default function Messages() {
     setSelectedConversationId(response.data.conversationId);
     queryClient.invalidateQueries({ queryKey: ["conversations"] });
   };
+  const selectedConversationIdRef = useRef(selectedConversationId);
+
+  useEffect(() => {
+    selectedConversationIdRef.current = selectedConversationId;
+  }, [selectedConversationId]);
+  // inside Messages component, add this useEffect:
+  useEffect(() => {
+    if (!user?.userId) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${import.meta.env.VITE_API_URL}/hubs/chat`, {
+        accessTokenFactory: () => localStorage.getItem("token") ?? "",
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    connection.on("ReceiveMessage", (message: Message) => {
+      if (message.conversationId === selectedConversationIdRef.current) {
+        queryClient.setQueryData(
+          ["messages", selectedConversationIdRef.current],
+          (old: Message[] = []) => [...old, message],
+        );
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    });
+
+    connection.start().then(() => {
+      connection.invoke("JoinPersonalGroup", user.userId.toString());
+    });
+
+    return () => {
+      connection.invoke("LeavePersonalGroup", user.userId.toString());
+      connection.stop();
+    };
+  }, [user?.userId]);
 
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) =>
@@ -89,15 +126,12 @@ export default function Messages() {
         content,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["messages", selectedConversationId],
-      });
       setMessageText("");
     },
   });
 
   const selectedConversation = conversations.find(
-    (c) => c.id === selectedConversationId,
+    (c) => c.id === selectedConversationId, // ✅
   );
 
   if (isLoading) return <p className="text-center mt-8">Loading...</p>;
@@ -114,7 +148,6 @@ export default function Messages() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-          {/* new chat avatars */}
           {following.length > 0 && (
             <div>
               <p className="text-xs text-gray-400 mb-2">New chat</p>

@@ -144,9 +144,9 @@ namespace backend.Controllers
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
             var senderInfo = await _context.Users
-        .Where(u => u.Id == userId.Value)
-        .Select(u => new { u.Username, u.ProfilePic })
-        .FirstOrDefaultAsync();
+                    .Where(u => u.Id == userId.Value)
+                    .Select(u => new { u.Username, u.ProfilePic })
+                    .FirstOrDefaultAsync();
 
             // 2. Build a single payload object used for both SignalR and the HTTP Response
             var wsPayload = new

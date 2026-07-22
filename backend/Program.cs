@@ -1,4 +1,5 @@
 using backend.Data;
+using backend.Hubs;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +50,7 @@ builder.Host.UseSerilog((context, config) =>
           .Enrich.FromLogContext();
 });
 
-
+builder.Services.AddSignalR();
 // CORS — allow React frontend
 builder.Services.AddCors(options =>
 {
@@ -91,5 +92,5 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();  
 app.UseAuthorization();
 app.MapControllers();
-
+app.MapHub<ChatHub>("/hubs/chat");
 app.Run();
