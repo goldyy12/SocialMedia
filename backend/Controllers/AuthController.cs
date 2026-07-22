@@ -94,6 +94,57 @@ namespace backend.Controllers
 
             return Ok(new { accessToken });
         }
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            var refreshTokenCookie = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshTokenCookie))
+            {
+                return Unauthorized(new { error = "No refresh token provided." });
+            }
+
+            var hashedToken = _tokenService.HashToken(refreshTokenCookie);
+            var tokenEntity = await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.TokenHash == hashedToken);
+
+            if (tokenEntity == null || tokenEntity.ExpiresAt < DateTime.UtcNow)
+            {
+                return Unauthorized(new { error = "Invalid or expired refresh token." });
+            }
+
+            var user = await _context.Users.FindAsync(tokenEntity.UserId);
+            if (user == null)
+            {
+                return Unauthorized(new { error = "User no longer exists." });
+            }
+
+            // Rotate: remove the old refresh token, issue a new one
+            _context.RefreshTokens.Remove(tokenEntity);
+
+            var newAccessToken = _tokenService.GenerateAccessToken(user);
+            var newRawRefreshToken = _tokenService.GenerateRefreshToken();
+            var newHashedToken = _tokenService.HashToken(newRawRefreshToken);
+
+            var newRefreshTokenEntity = new RefreshToken
+            {
+                UserId = user.Id,
+                TokenHash = newHashedToken,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            };
+
+            _context.RefreshTokens.Add(newRefreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            Response.Cookies.Append("refreshToken", newRawRefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = newRefreshTokenEntity.ExpiresAt
+            });
+
+            return Ok(new { accessToken = newAccessToken });
+        }
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
