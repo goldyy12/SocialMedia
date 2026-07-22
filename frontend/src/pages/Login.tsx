@@ -7,6 +7,7 @@ import axios from "axios";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [pending, setPending] = useState(false);
   const { login } = useAuth();
   const [isError, setIsError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function Login() {
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
+      setPending(true);
       if (!email || !password) {
         alert("Please enter both email and password.");
         return;
@@ -25,6 +27,7 @@ export default function Login() {
 
       const response = await api.post("/auth/login", { email, password });
       login(response.data.accessToken);
+      setPending(false);
 
       navigate("/");
     } catch (error) {
@@ -86,8 +89,9 @@ export default function Login() {
         <button
           type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors"
+          disabled={pending}
         >
-          Login
+          {pending ? "Logging in..." : "Login"}
         </button>
         {isError && (
           <p className="text-sm text-red-500 dark:text-red-400 mt-4 text-center bg-red-50 dark:bg-red-950/30 py-2 rounded-lg">
