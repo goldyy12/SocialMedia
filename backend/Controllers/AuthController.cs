@@ -1,9 +1,6 @@
-using backend.Data;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using backend.Models;
 using backend.DTOs;
-using backend.Services; // fixed: was backend.Service
+using backend.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
@@ -11,48 +8,19 @@ namespace backend.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly AppDbContext _context;
-        private readonly ILogger<AuthController> _logger;
-        private readonly TokenService _tokenService; // fixed: named field
+        private readonly IAuthService _authService;
 
-        public AuthController(
-            IConfiguration configuration,
-            AppDbContext context,
-            ILogger<AuthController> logger,
-            TokenService tokenService) // fixed: injected
+        public AuthController(IAuthService authService)
         {
-            _configuration = configuration;
-            _context = context;
-            _logger = logger;
-            _tokenService = tokenService;
+            _authService = authService;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            bool userExists = await _context.Users.AnyAsync(u =>
-                u.Email.ToLower() == dto.Email.ToLower() ||
-                u.Username.ToLower() == dto.Username.ToLower());
-
-            if (userExists)
-            {
-                _logger.LogWarning("Registration attempt failed — duplicate user for {Email}", dto.Email);
+            var result = await _authService.RegisterAsync(dto);
+            if (result == RegisterResult.UserAlreadyExists)
                 return BadRequest(new { error = "Username or Email is already in use." });
-            }
-
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-
-            var user = new User
-            {
-                Username = dto.Username,
-                Email = dto.Email,
-                PasswordHash = hashedPassword
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("User registered {UserId} {Username}", user.Id, user.Username);
 
             return Ok("User registered successfully.");
         }
@@ -60,113 +28,46 @@ namespace backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower());
-            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            {
-                _logger.LogWarning("Failed login attempt for {Email}", dto.Email);
+            var result = await _authService.LoginAsync(dto);
+            if (!result.Success)
                 return Unauthorized(new { error = "Invalid username or password" });
-            }
 
+            SetRefreshTokenCookie(result.RawRefreshToken!, result.RefreshTokenExpiresAt);
+            return Ok(new { accessToken = result.AccessToken });
+        }
 
-            var accessToken = _tokenService.GenerateAccessToken(user);
-            var rawRefreshToken = _tokenService.GenerateRefreshToken();
-            var hashedToken = _tokenService.HashToken(rawRefreshToken);
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            var refreshTokenCookie = Request.Cookies["refreshToken"];
+            var result = await _authService.RefreshAsync(refreshTokenCookie);
 
-            var refreshTokenEntity = new RefreshToken
-            {
-                UserId = user.Id,
-                TokenHash = hashedToken,
-                ExpiresAt = DateTime.UtcNow.AddDays(7)
-            };
+            if (!result.Success)
+                return Unauthorized(new { error = "Invalid or expired refresh token." });
 
-            _context.RefreshTokens.Add(refreshTokenEntity);
-            await _context.SaveChangesAsync();
+            SetRefreshTokenCookie(result.RawRefreshToken!, result.RefreshTokenExpiresAt);
+            return Ok(new { accessToken = result.AccessToken });
+        }
 
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var refreshTokenCookie = Request.Cookies["refreshToken"];
+            await _authService.LogoutAsync(refreshTokenCookie);
+
+            Response.Cookies.Delete("refreshToken");
+            return Ok();
+        }
+
+        private void SetRefreshTokenCookie(string rawRefreshToken, DateTime expiresAt)
+        {
             Response.Cookies.Append("refreshToken", rawRefreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
-                Expires = refreshTokenEntity.ExpiresAt
+                Expires = expiresAt
             });
-
-            _logger.LogInformation("User {UserId} logged in successfully", user.Id);
-
-            return Ok(new { accessToken });
-        }
-        [HttpPost("refresh")]
-        public async Task<IActionResult> Refresh()
-        {
-            var refreshTokenCookie = Request.Cookies["refreshToken"];
-            if (string.IsNullOrEmpty(refreshTokenCookie))
-            {
-                return Unauthorized(new { error = "No refresh token provided." });
-            }
-
-            var hashedToken = _tokenService.HashToken(refreshTokenCookie);
-            var tokenEntity = await _context.RefreshTokens
-                .FirstOrDefaultAsync(rt => rt.TokenHash == hashedToken);
-
-            if (tokenEntity == null || tokenEntity.ExpiresAt < DateTime.UtcNow)
-            {
-                return Unauthorized(new { error = "Invalid or expired refresh token." });
-            }
-
-            var user = await _context.Users.FindAsync(tokenEntity.UserId);
-            if (user == null)
-            {
-                return Unauthorized(new { error = "User no longer exists." });
-            }
-
-            // Generate new tokens first
-            var newAccessToken = _tokenService.GenerateAccessToken(user);
-            var newRawRefreshToken = _tokenService.GenerateRefreshToken();
-            var newHashedToken = _tokenService.HashToken(newRawRefreshToken);
-
-            var newRefreshTokenEntity = new RefreshToken
-            {
-                UserId = user.Id,
-                TokenHash = newHashedToken,
-                ExpiresAt = DateTime.UtcNow.AddDays(7)
-            };
-
-            // Add new token and save BEFORE removing old token
-            _context.RefreshTokens.Add(newRefreshTokenEntity);
-            await _context.SaveChangesAsync();
-
-            // Now remove the old refresh token (after new one is safely saved)
-            _context.RefreshTokens.Remove(tokenEntity);
-            await _context.SaveChangesAsync();
-
-            Response.Cookies.Append("refreshToken", newRawRefreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = newRefreshTokenEntity.ExpiresAt
-            });
-
-            return Ok(new { accessToken = newAccessToken });
-        }
-        [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
-        {
-            var refreshTokenCookie = Request.Cookies["refreshToken"];
-            if (!string.IsNullOrEmpty(refreshTokenCookie))
-            {
-                var hashedToken = _tokenService.HashToken(refreshTokenCookie);
-                var tokenEntity = await _context.RefreshTokens
-                    .FirstOrDefaultAsync(rt => rt.TokenHash == hashedToken);
-
-                if (tokenEntity != null)
-                {
-                    _context.RefreshTokens.Remove(tokenEntity);
-                    await _context.SaveChangesAsync();
-                }
-            }
-
-            Response.Cookies.Delete("refreshToken");
-            return Ok();
         }
     }
 }

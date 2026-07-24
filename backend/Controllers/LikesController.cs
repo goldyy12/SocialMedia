@@ -1,10 +1,7 @@
-﻿using backend.Data;
-using backend.Helpers;
-using backend.Models;
+﻿using backend.Helpers;
+using backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using backend.DTOs;
 
 namespace backend.Controllers
 {
@@ -13,11 +10,11 @@ namespace backend.Controllers
     [Authorize]
     public class LikeController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ILikeService _likeService;
 
-        public LikeController(AppDbContext context)
+        public LikeController(ILikeService likeService)
         {
-            _context = context;
+            _likeService = likeService;
         }
 
         [HttpPost("{postId}")]
@@ -26,38 +23,15 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
 
-            
-            var post = await _context.Posts.FindAsync(postId);
-            if (post == null) return NotFound("Post not found");
+            var result = await _likeService.LikePostAsync(postId, userId.Value);
 
-            
-            var existingLike = await _context.Likes
-                .FirstOrDefaultAsync(l => l.UserId == userId.Value && l.PostId == postId);
-            if (existingLike != null) return BadRequest("Post already liked");
-
-            var like = new Like
+            return result switch
             {
-                UserId = userId.Value,
-                PostId = postId,
-                CreatedAt = DateTime.UtcNow
+                LikeResult.PostNotFound => NotFound("Post not found"),
+                LikeResult.AlreadyLiked => BadRequest("Post already liked"),
+                LikeResult.Success => Ok(new { message = "Post liked successfully" }),
+                _ => StatusCode(500)
             };
-            if (post.UserId != userId.Value)
-            {
-                var liker = await _context.Users.FindAsync(userId.Value);
-                _context.Notifications.Add(new Notification
-                {
-                    UserId = post.UserId,
-                    Type = "like",
-                    Message = $"{liker!.Username} liked your post.",
-                    CreatedAt = DateTime.UtcNow
-
-                });
-            }
-
-            _context.Likes.Add(like);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Post liked successfully" });
         }
 
         [HttpDelete("{postId}")]
@@ -66,14 +40,14 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
 
-            var like = await _context.Likes
-                .FirstOrDefaultAsync(l => l.UserId == userId.Value && l.PostId == postId);
-            if (like == null) return NotFound("Like not found");
+            var result = await _likeService.UnlikePostAsync(postId, userId.Value);
 
-            _context.Likes.Remove(like);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Post unliked successfully" });
+            return result switch
+            {
+                UnlikeResult.LikeNotFound => NotFound("Like not found"),
+                UnlikeResult.Success => Ok(new { message = "Post unliked successfully" }),
+                _ => StatusCode(500)
+            };
         }
     }
 }

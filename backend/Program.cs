@@ -1,5 +1,6 @@
 using backend.Data;
 using backend.Hubs;
+using backend.Interfaces;
 using backend.Services;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,24 +8,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
-using backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
 builder.Services.AddControllers();
 
-// Swagger
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// PostgreSQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// JWT Auth
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -44,16 +40,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 builder.Services.AddAuthorization();
+
 builder.Host.UseSerilog((context, config) =>
 {
     config.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter())
           .Enrich.FromLogContext();
 });
 
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<IFollowService, FollowService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IConversationService, ConversationService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<TokenService>();
+
 builder.Services.AddSignalR();
-// CORS — allow React frontend
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -64,6 +70,7 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
 var cloudinaryConfig = builder.Configuration.GetSection("Cloudinary");
 var account = new Account(
     cloudinaryConfig["CloudName"],
@@ -72,27 +79,26 @@ var account = new Account(
 );
 var cloudinary = new Cloudinary(account);
 builder.Services.AddSingleton(cloudinary);
-builder.Services.AddScoped<TokenService>();
 
 var app = builder.Build();
 
-// Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
-app.UseSerilogRequestLogging();
 
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
-app.UseAuthentication();  
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");

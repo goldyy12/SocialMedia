@@ -1,9 +1,7 @@
-﻿using backend.Data;
-using backend.Helpers;
-using backend.Models;
+﻿using backend.Helpers;
+using backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
@@ -12,87 +10,59 @@ namespace backend.Controllers
     [Authorize]
     public class FollowController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IFollowService _followService;
 
-        public FollowController(AppDbContext context)
+        public FollowController(IFollowService followService)
         {
-            _context = context;
+            _followService = followService;
         }
 
-        // Send a follow request
         [HttpPost("{targetUserId}")]
         public async Task<IActionResult> SendFollowRequest(int targetUserId)
         {
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized();
 
-            if (userId.Value == targetUserId)
-                return BadRequest("You cannot follow yourself");
-
-            var existing = await _context.Follows
-                .FirstOrDefaultAsync(f => f.FollowerId == userId.Value && f.FollowingId == targetUserId);
-            if (existing != null) return BadRequest("Follow request already sent");
-
-            var follow = new Follow
+            var result = await _followService.SendFollowRequestAsync(userId.Value, targetUserId);
+            return result switch
             {
-                FollowerId = userId.Value,
-                FollowingId = targetUserId,
-                Status = "pending",
-                CreatedAt = DateTime.UtcNow
+                SendFollowResult.CannotFollowSelf => BadRequest("You cannot follow yourself"),
+                SendFollowResult.AlreadySent => BadRequest("Follow request already sent"),
+                SendFollowResult.Success => Ok(new { message = "Follow request sent" }),
+                _ => StatusCode(500)
             };
-
-            _context.Follows.Add(follow);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Follow request sent" });
         }
 
-        // Accept a follow request
         [HttpPatch("{followerId}/accept")]
         public async Task<IActionResult> AcceptFollowRequest(int followerId)
         {
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized();
 
-            var follow = await _context.Follows
-                .FirstOrDefaultAsync(f => f.FollowerId == followerId && f.FollowingId == userId.Value);
-            if (follow == null) return NotFound("Follow request not found");
-            if (follow.Status == "accepted") return BadRequest("Already accepted");
-
-            var currentUser = await _context.Users.FindAsync(userId.Value);
-
-            _context.Notifications.Add(new Notification
+            var result = await _followService.AcceptFollowRequestAsync(userId.Value, followerId);
+            return result switch
             {
-                UserId = followerId,
-                Type = "follow_accepted",
-                Message = $"{currentUser.Username} accepted your follow request.",
-                CreatedAt = DateTime.UtcNow
-            });
-
-            follow.Status = "accepted";
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Follow request accepted" });
+                AcceptFollowResult.NotFound => NotFound("Follow request not found"),
+                AcceptFollowResult.AlreadyAccepted => BadRequest("Already accepted"),
+                AcceptFollowResult.Success => Ok(new { message = "Follow request accepted" }),
+                _ => StatusCode(500)
+            };
         }
 
-
-       
         [HttpDelete("followers/{followerId}")]
         public async Task<IActionResult> RemoveFollower(int followerId)
         {
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized();
 
-            var follow = await _context.Follows
-                .FirstOrDefaultAsync(f => f.FollowerId == followerId && f.FollowingId == userId.Value);
-            if (follow == null) return NotFound("Follower not found");
-
-            _context.Follows.Remove(follow);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Follower removed" });
+            var result = await _followService.RemoveFollowerAsync(userId.Value, followerId);
+            return result switch
+            {
+                RemoveFollowerResult.NotFound => NotFound("Follower not found"),
+                RemoveFollowerResult.Success => Ok(new { message = "Follower removed" }),
+                _ => StatusCode(500)
+            };
         }
-
 
         [HttpGet("requests")]
         public async Task<IActionResult> GetFollowRequests()
@@ -100,22 +70,8 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized();
 
-            var requests = await _context.Follows
-                .AsNoTracking()
-                .Where(f => f.FollowingId == userId.Value && f.Status == "pending")
-                .Select(f => new
-                {
-                    f.Id,
-                    f.FollowerId,
-                    Username = f.Follower.Username,
-                    ProfilePic = f.Follower.ProfilePic,
-                    f.CreatedAt
-                })
-                .ToListAsync();
-
-            return Ok(requests);
+            return Ok(await _followService.GetFollowRequestsAsync(userId.Value));
         }
-
 
         [HttpGet("followers")]
         public async Task<IActionResult> GetFollowers()
@@ -123,20 +79,8 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized();
 
-            var followers = await _context.Follows
-                .AsNoTracking()
-                .Where(f => f.FollowingId == userId.Value && f.Status == "accepted")
-                .Select(f => new
-                {
-                    f.FollowerId,
-                    Username = f.Follower.Username,
-                    ProfilePic = f.Follower.ProfilePic
-                })
-                .ToListAsync();
-
-            return Ok(followers);
+            return Ok(await _followService.GetFollowersAsync(userId.Value));
         }
-
 
         [HttpGet("following")]
         public async Task<IActionResult> GetFollowing()
@@ -144,60 +88,31 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized();
 
-            var following = await _context.Follows
-                .AsNoTracking()
-                .Where(f => f.FollowerId == userId.Value && f.Status == "accepted")
-                .Select(f => new
-                {
-                    f.FollowingId,
-                    Username = f.Following.Username,
-                    ProfilePic = f.Following.ProfilePic
-                })
-                .ToListAsync();
-
-            return Ok(following);
+            return Ok(await _followService.GetFollowingAsync(userId.Value));
         }
+
         [HttpGet("available-friends")]
         public async Task<IActionResult> GetAvailableFriends()
         {
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized();
-            
-            Console.WriteLine($"Current userId: {userId}");
-            var friends = await _context.Users
-                .AsNoTracking()
-                .Where(u => u.Id != userId.Value &&
-                            !_context.Follows.Any(f => f.FollowerId == userId.Value && f.FollowingId == u.Id))
-                .Select(u => new
-                {
-                    u.Id,
-                    u.Username,
-                    u.ProfilePic,
-                    u.Bio,
-                    FollowsYou = _context.Follows.Any(f =>
-                    f.FollowerId == u.Id &&
-                f.FollowingId == userId.Value &&
-                f.Status == "accepted"),
-                isPending = _context.Follows.Any(f => f.FollowerId == userId.Value && f.FollowingId == u.Id && f.Status == "pending")
-                })
-                .ToListAsync();
-            return Ok(friends);
+
+            return Ok(await _followService.GetAvailableFriendsAsync(userId.Value));
         }
+
         [HttpDelete("{targetUserId}")]
         public async Task<IActionResult> Unfollow(int targetUserId)
         {
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized();
 
-            var follow = await _context.Follows
-                .FirstOrDefaultAsync(f => f.FollowerId == userId.Value && f.FollowingId == targetUserId);
-            if (follow == null) return NotFound("Follow not found");
-
-            _context.Follows.Remove(follow);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Unfollowed successfully" });
+            var result = await _followService.UnfollowAsync(userId.Value, targetUserId);
+            return result switch
+            {
+                UnfollowResult.NotFound => NotFound("Follow not found"),
+                UnfollowResult.Success => Ok(new { message = "Unfollowed successfully" }),
+                _ => StatusCode(500)
+            };
         }
     }
-
 }

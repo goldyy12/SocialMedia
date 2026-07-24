@@ -1,29 +1,29 @@
-﻿using backend.Data;
-using backend.Helpers;
-using Microsoft.AspNetCore.Http;
+﻿using backend.Helpers;
+using backend.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class NotificationsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public NotificationsController(AppDbContext context)
+        public NotificationsController(INotificationService notificationService)
         {
-            _context = context;
+            _notificationService = notificationService;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetNotifications()
         {
             int? userId = User.GetCurrentUserId();
-            var notifications = await _context.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)
-                .OrderByDescending(n => n.CreatedAt)
-                .ToListAsync();
+            if (userId == null) return Unauthorized();
+
+            var notifications = await _notificationService.GetUnreadNotificationsAsync(userId.Value);
             return Ok(notifications);
         }
 
@@ -31,17 +31,19 @@ namespace backend.Controllers
         public async Task<IActionResult> MarkAllRead()
         {
             int? userId = User.GetCurrentUserId();
-            await _context.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)
-                .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+            if (userId == null) return Unauthorized();
+
+            await _notificationService.MarkAllReadAsync(userId.Value);
             return Ok();
         }
+
         [HttpGet("unread-count")]
         public async Task<IActionResult> GetUnreadCount()
         {
             int? userId = User.GetCurrentUserId();
-            var count = await _context.Notifications
-                .CountAsync(n => n.UserId == userId && !n.IsRead);
+            if (userId == null) return Unauthorized();
+
+            var count = await _notificationService.GetUnreadCountAsync(userId.Value);
             return Ok(new { count });
         }
     }

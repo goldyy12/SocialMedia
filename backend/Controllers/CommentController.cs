@@ -1,10 +1,8 @@
-﻿using backend.Data;
-using backend.DTOs;
+﻿using backend.DTOs;
 using backend.Helpers;
-using backend.Models;
+using backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
@@ -13,11 +11,11 @@ namespace backend.Controllers
     [Authorize]
     public class CommentController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ICommentService _commentService;
 
-        public CommentController(AppDbContext context)
+        public CommentController(ICommentService commentService)
         {
-            _context = context;
+            _commentService = commentService;
         }
 
         [HttpGet("{postId}")]
@@ -26,23 +24,8 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
 
-            var post = await _context.Posts.FindAsync(postId);
-            if (post == null) return NotFound("Post not found");
-
-            var comments = await _context.Comments
-                .AsNoTracking()
-                .Where(c => c.PostId == postId)
-                .OrderByDescending(c => c.CreatedAt)
-                .Select(c => new
-                {
-                    c.Id,
-                    c.Content,
-                    c.CreatedAt,
-                    c.UserId,
-                    Username = c.User.Username,
-                    ProfilePic = c.User.ProfilePic
-                })
-                .ToListAsync();
+            var comments = await _commentService.GetCommentsForPostAsync(postId);
+            if (comments == null) return NotFound("Post not found");
 
             return Ok(comments);
         }
@@ -53,41 +36,10 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
 
-            var post = await _context.Posts.FindAsync(postId);
-            if (post == null) return NotFound("Post not found");
+            var result = await _commentService.AddCommentAsync(postId, userId.Value, dto);
+            if (result == null) return NotFound("Post or user not found");
 
-            var user = await _context.Users.FindAsync(userId.Value);
-            if (user == null) return Unauthorized("User not found");
-
-            var comment = new Comment
-            {
-                Content = dto.Content,
-                PostId = postId,
-                UserId = userId.Value,
-                CreatedAt = DateTime.UtcNow
-            };
-            if (post.UserId != userId.Value)
-            {
-                _context.Notifications.Add(new Notification
-                {
-                    UserId = post.UserId,
-                    Type = "comment",
-                    Message = $"{user.Username} commented on your post.",
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                comment.Id,
-                comment.Content,
-                comment.CreatedAt,
-                comment.UserId,
-                Username = user.Username,
-                ProfilePic = user.ProfilePic
-            });
+            return Ok(result);
         }
 
         [HttpDelete("{commentId}")]
@@ -96,31 +48,23 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
 
-            var comment = await _context.Comments.FindAsync(commentId);
-            if (comment == null) return NotFound("Comment not found");
-            if (comment.UserId != userId.Value) return Forbid();
-
-            _context.Comments.Remove(comment);
-            await _context.SaveChangesAsync();
+            var result = await _commentService.DeleteCommentAsync(commentId, userId.Value);
+            if (result == null) return NotFound("Comment not found");
+            if (result == false) return Forbid();
 
             return NoContent();
         }
+
         [HttpPut("{commentId}")]
         public async Task<IActionResult> EditComment(int commentId, [FromBody] CommentDto dto)
         {
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
-            var comment = await _context.Comments.FindAsync(commentId);
-            if (comment == null) return NotFound("Comment not found");
-            if (comment.UserId != userId.Value) return Forbid();
-            comment.Content = dto.Content;
-            await _context.SaveChangesAsync();
-            return Ok(new
-            {
-                comment.Id,
-                comment.Content,
-                comment.CreatedAt,
-                comment.UserId
-            });
-        }     }
+
+            var result = await _commentService.EditCommentAsync(commentId, userId.Value, dto);
+            if (result == null) return NotFound("Comment not found");
+
+            return Ok(result);
+        }
+    }
 }
