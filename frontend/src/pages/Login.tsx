@@ -22,14 +22,19 @@ export default function Login() {
   const handleGoogleResponse = async (response: { credential: string }) => {
     try {
       setPending(true);
-      const res = await api.post("/auth/google", { idToken: response.credential });
+      const res = await api.post("/auth/google", {
+        idToken: response.credential,
+      });
       login(res.data.accessToken);
       setPending(false);
       navigate("/");
     } catch (error) {
       console.error("Google login failed:", error);
       if (axios.isAxiosError(error)) {
-        setIsError(error.response?.data?.error ?? "Google sign-in failed. Please try again.");
+        setIsError(
+          error.response?.data?.error ??
+            "Google sign-in failed. Please try again.",
+        );
       } else {
         setIsError("Google sign-in failed. Please try again.");
       }
@@ -152,7 +157,7 @@ export default function Login() {
         )}
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
           Don't have an account?{" "}
-          
+          <a
             href="/register"
             className="text-blue-600 dark:text-blue-400 hover:underline"
           >
