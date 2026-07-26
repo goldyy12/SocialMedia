@@ -3,6 +3,10 @@ import api from "../Api";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/useAuth";
 import * as signalR from "@microsoft/signalr";
+import {
+  IncomingMessageSchema,
+  MessageContentSchema,
+} from "../schemas/messages";
 
 interface Conversation {
   id: number;
@@ -99,7 +103,13 @@ export default function Messages() {
       .withAutomaticReconnect()
       .build();
 
-    connection.on("ReceiveMessage", (message: Message) => {
+    connection.on("ReceiveMessage", (raw: unknown) => {
+      const result = IncomingMessageSchema.safeParse(raw);
+      if (!result.success) {
+        console.error("Malformed message from SignalR:", result.error);
+        return;
+      }
+      const message = result.data;
       if (message.conversationId === selectedConversationIdRef.current) {
         queryClient.setQueryData(
           ["messages", selectedConversationIdRef.current],
@@ -129,9 +139,16 @@ export default function Messages() {
       setMessageText("");
     },
   });
+  const handleSend = () => {
+    const result = MessageContentSchema.safeParse(messageText);
+    if (!result.success) {
+      return;
+    }
+    sendMessageMutation.mutate(result.data);
+  };
 
   const selectedConversation = conversations.find(
-    (c) => c.id === selectedConversationId, // ✅
+    (c) => c.id === selectedConversationId,
   );
 
   if (isLoading) return <p className="text-center mt-8">Loading...</p>;
@@ -269,7 +286,7 @@ export default function Messages() {
                 onChange={(e) => setMessageText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && messageText.trim()) {
-                    sendMessageMutation.mutate(messageText.trim());
+                    handleSend();
                   }
                 }}
                 placeholder="Type a message..."
@@ -277,8 +294,7 @@ export default function Messages() {
               />
               <button
                 onClick={() => {
-                  if (messageText.trim())
-                    sendMessageMutation.mutate(messageText.trim());
+                  handleSend();
                 }}
                 disabled={sendMessageMutation.isPending}
                 className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm hover:bg-blue-600 disabled:opacity-50 shrink-0"

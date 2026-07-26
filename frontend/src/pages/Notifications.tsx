@@ -21,7 +21,6 @@ export default function Notifications() {
     queryFn: fetchNotifications,
   });
 
-  // 👇 hook called inside the component, not outside
   const { mutate: markAllRead, isPending } = useMutation({
     mutationFn: () => api.patch("/notifications/read"),
     onSuccess: () => {

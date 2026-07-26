@@ -3,6 +3,7 @@ import api from "../Api";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { LoginSchema } from "../schemas/login";
 
 declare global {
   interface Window {
@@ -60,21 +61,16 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const result = LoginSchema.safeParse({ email, password });
+    if (!result.success) {
+      setIsError("Please enter valid email and password.");
+      return;
+    }
+
     try {
       setPending(true);
-      if (!email || !password) {
-        alert("Please enter both email and password.");
-        return;
-      }
-      if (password.length < 6) {
-        alert("Password must be at least 6 characters long.");
-        return;
-      }
-
-      const response = await api.post("/auth/login", { email, password });
+      const response = await api.post("/auth/login", result.data);
       login(response.data.accessToken);
-      setPending(false);
-
       navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
@@ -82,11 +78,11 @@ export default function Login() {
         setIsError(
           error.response?.data?.error ?? "Login failed. Please try again.",
         );
-        setPending(false);
       } else {
         setIsError("Login failed. Please try again.");
-        setPending(false);
       }
+    } finally {
+      setPending(false);
     }
   };
 

@@ -3,6 +3,7 @@ import type { Post } from "../types/Home";
 import { useAuth } from "../context/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import PostCard from "../components/PostCard";
 
 interface UserProfile {
   id: number;
@@ -175,18 +176,12 @@ export default function Profile() {
         <p className="text-gray-500">No posts yet.</p>
       ) : (
         posts.map((post) => (
-          <div key={post.id} className="bg-white rounded-lg shadow p-4 mb-4">
-            <p>{post.content}</p>
-            {post.imageUrl && (
-              <img
-                src={post.imageUrl}
-                className="mt-2 rounded-lg w-full object-cover"
-              />
-            )}
-            <p className="text-gray-400 text-sm mt-2">
-              {new Date(post.createdAt).toLocaleDateString()}
-            </p>
-          </div>
+          <PostCard
+            key={post.id}
+            post={post}
+            queryKey={["userPosts", id]}
+            currentUserId={user?.userId}
+          />
         ))
       )}
     </div>

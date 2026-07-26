@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import api from "../Api";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { SignupSchema } from "../schemas/register";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -13,10 +14,15 @@ export default function Register() {
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const result = SignupSchema.safeParse({ username, email, password });
+    if (!result.success) {
+      setIsError("Please enter valid information.");
+      return;
+    }
     setIsError(null);
     setIsSubmitting(true);
     try {
-      await api.post("/auth/register", { username, email, password });
+      await api.post("/auth/register", result.data);
       navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);
