@@ -1,4 +1,4 @@
-﻿// Interfaces/FollowResults.cs
+﻿
 namespace backend.Interfaces
 {
     public enum SendFollowResult { Success, CannotFollowSelf, AlreadySent }

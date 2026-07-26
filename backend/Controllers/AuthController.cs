@@ -69,5 +69,16 @@ namespace backend.Controllers
                 Expires = expiresAt
             });
         }
+
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
+        {
+            var result = await _authService.GoogleLoginAsync(dto.IdToken);
+            if (!result.Success)
+                return Unauthorized(new { error = "Invalid Google token." });
+
+            SetRefreshTokenCookie(result.RawRefreshToken!, result.RefreshTokenExpiresAt);
+            return Ok(new { accessToken = result.AccessToken });
+        }
     }
 }

@@ -9,5 +9,6 @@ namespace backend.Interfaces
         Task<LoginResult> LoginAsync(LoginDto dto);
         Task<RefreshResult> RefreshAsync(string? refreshTokenCookie);
         Task LogoutAsync(string? refreshTokenCookie);
+        Task<LoginResult> GoogleLoginAsync(string idToken);
     }
 }

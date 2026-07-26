@@ -1,4 +1,5 @@
 using backend.Models;
+using Google.Apis.Auth;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,12 +17,12 @@ public class TokenService
     public string GenerateAccessToken(User user)
     {
         var claims = new[]
-{
-    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-    new Claim("userId", user.Id.ToString()),
-    new Claim("username", user.Username),
-    new Claim(JwtRegisteredClaimNames.Email, user.Email),
-};
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim("userId", user.Id.ToString()),
+            new Claim("username", user.Username),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+        };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -47,5 +48,24 @@ public class TokenService
         using var sha256 = SHA256.Create();
         var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));
         return Convert.ToHexString(bytes);
+    }
+
+    public async Task<GoogleJsonWebSignature.Payload?> VerifyGoogleIdTokenAsync(string idToken)
+    {
+        try
+        {
+            var googleClientId = _config["Google:ClientId"];
+
+            var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { googleClientId }
+            });
+
+            return payload;
+        }
+        catch (InvalidJwtException)
+        {
+            return null;
+        }
     }
 }

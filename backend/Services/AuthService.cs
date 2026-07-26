@@ -134,5 +134,72 @@ namespace backend.Services
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task<LoginResult> GoogleLoginAsync(string idToken)
+        {
+            var payload = await _tokenService.VerifyGoogleIdTokenAsync(idToken);
+            if (payload == null)
+            {
+                _logger.LogWarning("Invalid Google ID token");
+                return new LoginResult { Success = false };
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == payload.Email.ToLower());
+
+            if (user == null)
+            {
+                user = new User
+                {
+                    Username = await GenerateUniqueUsernameAsync(payload.Name ?? payload.Email),
+                    Email = payload.Email,
+                    GoogleId = payload.Subject,
+                    ProfilePic = payload.Picture
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("New user registered via Google: {UserId} {Username}", user.Id, user.Username);
+            }
+            else if (user.GoogleId == null)
+            {
+                // Existing email/password account — link the Google identity
+                user.GoogleId = payload.Subject;
+                await _context.SaveChangesAsync();
+            }
+
+            var accessToken = _tokenService.GenerateAccessToken(user);
+            var rawRefreshToken = _tokenService.GenerateRefreshToken();
+            var hashedToken = _tokenService.HashToken(rawRefreshToken);
+
+            var refreshTokenEntity = new RefreshToken
+            {
+                UserId = user.Id,
+                TokenHash = hashedToken,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            };
+
+            _context.RefreshTokens.Add(refreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            return new LoginResult
+            {
+                Success = true,
+                AccessToken = accessToken,
+                RawRefreshToken = rawRefreshToken,
+                RefreshTokenExpiresAt = refreshTokenEntity.ExpiresAt
+            };
+        }
+        private async Task<string> GenerateUniqueUsernameAsync(string baseName)
+        {
+            var candidate = baseName.Replace(" ", "").ToLower();
+            var suffix = 0;
+            while (await _context.Users.AnyAsync(u => u.Username == candidate))
+            {
+                suffix++;
+                candidate = $"{baseName.Replace(" ", "").ToLower()}{suffix}";
+            }
+            return candidate;
+        }
+
     }
+
 }
