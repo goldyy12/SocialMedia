@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import api from "../Api";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -11,8 +17,43 @@ export default function Login() {
   const { login } = useAuth();
   const [isError, setIsError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleGoogleResponse = async (response: { credential: string }) => {
+    try {
+      setPending(true);
+      const res = await api.post("/auth/google", { idToken: response.credential });
+      login(res.data.accessToken);
+      setPending(false);
+      navigate("/");
+    } catch (error) {
+      console.error("Google login failed:", error);
+      if (axios.isAxiosError(error)) {
+        setIsError(error.response?.data?.error ?? "Google sign-in failed. Please try again.");
+      } else {
+        setIsError("Google sign-in failed. Please try again.");
+      }
+      setPending(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!window.google || !googleButtonRef.current) return;
+
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: handleGoogleResponse,
+    });
+
+    window.google.accounts.id.renderButton(googleButtonRef.current, {
+      theme: "outline",
+      size: "large",
+      width: 320,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       setPending(true);
@@ -95,6 +136,15 @@ export default function Login() {
         >
           {pending ? "Logging in..." : "Login"}
         </button>
+
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700" />
+          <span className="text-xs text-gray-400 dark:text-gray-500">OR</span>
+          <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700" />
+        </div>
+
+        <div ref={googleButtonRef} className="flex justify-center" />
+
         {isError && (
           <p className="text-sm text-red-500 dark:text-red-400 mt-4 text-center bg-red-50 dark:bg-red-950/30 py-2 rounded-lg">
             {isError}
@@ -102,7 +152,7 @@ export default function Login() {
         )}
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
           Don't have an account?{" "}
-          <a
+          
             href="/register"
             className="text-blue-600 dark:text-blue-400 hover:underline"
           >
