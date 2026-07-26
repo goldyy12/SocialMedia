@@ -103,11 +103,10 @@ export default function Home() {
 
       return { previousPosts };
     },
-    //  Correct parameter order (using underscores to skip unused inputs)
-onError: (_err, _variables, context) => {
-  queryClient.setQueryData(["posts"], context?.previousPosts);
-},
 
+    onError: (_err, _variables, context) => {
+      queryClient.setQueryData(["posts"], context?.previousPosts);
+    },
   });
 
   const deletePostMutation = useMutation({
@@ -179,9 +178,16 @@ onError: (_err, _variables, context) => {
     }
     addCommentMutation.mutate({ postId, commentText });
   };
-  function optimizeCloudinaryUrl(url: string, width = 700): string {
+  function optimizeCloudinaryUrl(
+    url: string,
+    width = 700,
+    height = 394,
+  ): string {
     if (!url?.includes("res.cloudinary.com")) return url;
-    return url.replace("/upload/", `/upload/w_${width},f_auto,q_auto/`);
+    return url.replace(
+      "/upload/",
+      `/upload/w_${width},h_${height},c_fill,g_auto,f_auto,q_auto/`,
+    );
   }
 
   if (isLoading)
@@ -250,7 +256,6 @@ onError: (_err, _variables, context) => {
           </div>
         )}
 
-        {/* posts */}
         {posts.length === 0 ? (
           <p className="text-gray-500">No posts yet.</p>
         ) : (
@@ -363,10 +368,10 @@ onError: (_err, _variables, context) => {
                         style={{ aspectRatio: "16/9" }}
                       >
                         <img
-                          src={optimizeCloudinaryUrl(post.imageUrl)}
+                          src={optimizeCloudinaryUrl(post.imageUrl, 700, 394)}
                           fetchPriority="high"
                           alt={`Post by ${post.username}`}
-                          className="rounded-lg w-full h-full object-cover"
+                          className="rounded-lg w-full h-full"
                         />
                       </div>
                     )}
