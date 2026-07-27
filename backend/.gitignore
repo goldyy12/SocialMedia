@@ -1,13 +1,14 @@
-# Build outputs
-bin/
-obj/
-
 # Visual Studio
 .vs/
-*.user
+**/.vs/
 
-# Environment/secrets
-appsettings.Development.json
+# Build folders
+**/[Bb]in/
+**/[Oo]bj/
 
-# Logs
-*.log
+# Node dependencies
+node_modules/
+frontend/node_modules/
+
+# Frontend build output
+dist/

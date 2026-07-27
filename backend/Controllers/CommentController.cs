@@ -3,6 +3,7 @@ using backend.Helpers;
 using backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using backend.Interfaces;
 
 namespace backend.Controllers
 {
@@ -61,10 +62,15 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
 
-            var result = await _commentService.EditCommentAsync(commentId, userId.Value, dto);
-            if (result == null) return NotFound("Comment not found");
+            var (result, comment) = await _commentService.EditCommentAsync(commentId, userId.Value, dto);
 
-            return Ok(result);
+            return result switch
+            {
+                EditCommentsResults.NotFound => NotFound("Comment not found"),
+                EditCommentsResults.Forbidden => Forbid(),
+                EditCommentsResults.Success => Ok(comment),
+                _ => StatusCode(500)
+            };
         }
     }
 }
