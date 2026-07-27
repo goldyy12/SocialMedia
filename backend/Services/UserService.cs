@@ -75,17 +75,10 @@ namespace backend.Services
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return null;
-<<<<<<< HEAD
 
             if (dto.Bio != null) user.Bio = dto.Bio;
             if (dto.ProfilePic != null) user.ProfilePic = dto.ProfilePic;
 
-=======
-            if (dto.Bio != null) user.Bio = dto.Bio;
-            if (dto.ProfilePic != null) user.ProfilePic = dto.ProfilePic;
-            user.Bio = dto.Bio;
-            user.ProfilePic = dto.ProfilePic;
->>>>>>> d71842155d68d5e0b596b0a1711b75029c32a608
             await _context.SaveChangesAsync();
 
             return new UserSummaryDto
