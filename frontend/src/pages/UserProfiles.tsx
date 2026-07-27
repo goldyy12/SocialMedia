@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import api from "../Api";
 import type { Post } from "../types/Home";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import PostCard from "../components/PostCard";
 
 interface UserProfile {
   id: number;
@@ -11,7 +12,7 @@ interface UserProfile {
   createdAt: string;
   followersCount: number;
   followingCount: number;
-  isFollowing: boolean; // 👈 add this
+  isFollowing: string;
 }
 
 async function fetchUserProfile(id: number): Promise<UserProfile> {
@@ -55,6 +56,7 @@ export default function UserProfile() {
       queryClient.invalidateQueries({ queryKey: ["user", numericId] });
     },
   });
+  console.log("Profile data:", profile);
 
   if (profileLoading || postsLoading)
     return <p className="text-center mt-8">Loading...</p>;
@@ -83,9 +85,11 @@ export default function UserProfile() {
               >
                 {isPending
                   ? "..."
-                  : profile.isFollowing
-                    ? "Unfollow"
-                    : "Follow"}
+                  : profile.isFollowing == "pending"
+                    ? "pending"
+                    : profile.isFollowing == "accepted"
+                      ? "unfollow"
+                      : "follow"}
               </button>
             </div>
             <p className="text-gray-500">{profile.bio || "No bio yet"}</p>
@@ -109,18 +113,12 @@ export default function UserProfile() {
         <p className="text-gray-500">No posts yet.</p>
       ) : (
         posts.map((post) => (
-          <div key={post.id} className="bg-white rounded-lg shadow p-4 mb-4">
-            <p>{post.content}</p>
-            {post.imageUrl && (
-              <img
-                src={post.imageUrl}
-                className="mt-2 rounded-lg w-full object-cover"
-              />
-            )}
-            <p className="text-gray-400 text-sm mt-2">
-              {new Date(post.createdAt).toLocaleDateString()}
-            </p>
-          </div>
+          <PostCard
+            key={post.id}
+            post={post}
+            queryKey={["userPosts", id]}
+            currentUserId={id}
+          />
         ))
       )}
     </div>

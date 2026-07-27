@@ -31,6 +31,7 @@ export default function Register() {
           error.response?.data?.error ??
             "Registration failed. Please try again.",
         );
+        console.error("Axios error response:", error.response);
       } else {
         setIsError("Registration failed. Please try again.");
       }
