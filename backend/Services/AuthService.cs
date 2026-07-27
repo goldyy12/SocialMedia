@@ -10,10 +10,10 @@ namespace backend.Services
     public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
-        private readonly TokenService _tokenService;
+        private readonly ITokenService _tokenService;
         private readonly ILogger<AuthService> _logger;
 
-        public AuthService(AppDbContext context, TokenService tokenService, ILogger<AuthService> logger)
+        public AuthService(AppDbContext context, ITokenService tokenService, ILogger<AuthService> logger)
         {
             _context = context;
             _tokenService = tokenService;

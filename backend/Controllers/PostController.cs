@@ -69,11 +69,15 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
 
-            var result = await _postService.UpdatePostAsync(id, userId.Value, dto);
-            if (result == null) return NotFound("Post not found");
-            if (result == false) return Forbid();
+            var (result, updatedPost) = await _postService.UpdatePostAsync(id, userId.Value, dto);
 
-            return Ok("Post Updated Successfully");
+            return result switch
+            {
+                UpdatePostResult.NotFound => NotFound("Post not found"),
+                UpdatePostResult.Forbidden => Forbid(),
+                UpdatePostResult.Success => Ok(updatedPost),
+                _ => StatusCode(500)
+            };
         }
 
         [HttpPost("upload")]

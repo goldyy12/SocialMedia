@@ -89,19 +89,19 @@ namespace backend.Services
             return true;
         }
 
-        public async Task<CommentResponseDto?> EditCommentAsync(int commentId, int userId, CommentDto dto)
+        public async Task<(EditCommentsResults Result, CommentResponseDto? Comment)> EditCommentAsync(int commentId, int userId, CommentDto dto)
         {
             var comment = await _context.Comments
                 .Include(c => c.User)
                 .FirstOrDefaultAsync(c => c.Id == commentId);
 
-            if (comment == null) return null;
-            if (comment.UserId != userId) return null; // handled separately below via a forbidden check if you want to distinguish
+            if (comment == null) return (EditCommentsResults.NotFound, null);
+            if (comment.UserId != userId) return (EditCommentsResults.Forbidden, null);
 
             comment.Content = dto.Content;
             await _context.SaveChangesAsync();
 
-            return new CommentResponseDto
+            var responseDto = new CommentResponseDto
             {
                 Id = comment.Id,
                 Content = comment.Content,
@@ -110,6 +110,8 @@ namespace backend.Services
                 Username = comment.User.Username,
                 ProfilePic = comment.User.ProfilePic
             };
+
+            return (EditCommentsResults.Success, responseDto);
         }
     }
 }

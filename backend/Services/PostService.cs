@@ -111,16 +111,28 @@ namespace backend.Services
             return true;
         }
 
-        public async Task<bool?> UpdatePostAsync(int postId, int userId, PostDto dto)
+        public async Task<(UpdatePostResult Result, PostResponseDto? Post)> UpdatePostAsync(int postId, int userId, PostDto dto)
         {
             var post = await _context.Posts.FindAsync(postId);
-            if (post == null) return null;
-            if (post.UserId != userId) return false;
+            if (post == null) return (UpdatePostResult.NotFound, null);
+            if (post.UserId != userId) return (UpdatePostResult.Forbidden, null);
+
+            var user = await _context.Users.FindAsync(userId);
 
             post.Content = dto.Content;
             post.ImageUrl = dto.ImageUrl;
             await _context.SaveChangesAsync();
-            return true;
+
+            return (UpdatePostResult.Success, new PostResponseDto
+            {
+                Id = post.Id,
+                Content = post.Content,
+                ImageUrl = post.ImageUrl,
+                CreatedAt = post.CreatedAt,
+                UserId = post.UserId,
+                Username = user!.Username,
+                ProfilePic = user.ProfilePic
+            });
         }
     }
 }

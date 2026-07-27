@@ -67,7 +67,7 @@ namespace backend.Services
                     IsFollowing = u.Followers
                         .Where(f => f.FollowerId == currentUserId)
                         .Select(f => f.Status)
-                        .FirstOrDefault() // null if no row exists, else "pending" or "accepted"
+                        .FirstOrDefault()
                 })
                 .FirstOrDefaultAsync();
         }
@@ -76,8 +76,9 @@ namespace backend.Services
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return null;
 
-            user.Bio = dto.Bio;
-            user.ProfilePic = dto.ProfilePic;
+            if (dto.Bio != null) user.Bio = dto.Bio;
+            if (dto.ProfilePic != null) user.ProfilePic = dto.ProfilePic;
+
             await _context.SaveChangesAsync();
 
             return new UserSummaryDto

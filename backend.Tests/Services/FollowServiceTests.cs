@@ -2,7 +2,6 @@ using backend.Data;
 using backend.Models;
 using backend.Services;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 using backend.Interfaces;
 
 namespace backend.Tests.Services
