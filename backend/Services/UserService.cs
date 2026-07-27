@@ -64,11 +64,13 @@ namespace backend.Services
                     CreatedAt = u.CreatedAt,
                     FollowersCount = u.Followers.Count(f => f.Status == "accepted"),
                     FollowingCount = u.Following.Count(f => f.Status == "accepted"),
-                    IsFollowing = u.Followers.Any(f => f.FollowerId == currentUserId && f.Status == "accepted")
+                    IsFollowing = u.Followers
+                        .Where(f => f.FollowerId == currentUserId)
+                        .Select(f => f.Status)
+                        .FirstOrDefault() // null if no row exists, else "pending" or "accepted"
                 })
                 .FirstOrDefaultAsync();
         }
-
         public async Task<UserSummaryDto?> UpdateProfileAsync(int userId, UpdateProfileDto dto)
         {
             var user = await _context.Users.FindAsync(userId);
