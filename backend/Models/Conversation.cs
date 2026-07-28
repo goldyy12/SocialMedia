@@ -12,6 +12,6 @@
         public int User2Id { get; set; }
         public User User2 { get; set; } = null!;
 
-        public ICollection<Message> Messages { get; set; }
+        public ICollection<Message>? Messages { get; set; }
     }
 }

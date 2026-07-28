@@ -44,7 +44,7 @@ namespace backend.Services
 
         public async Task<List<ConversationSummaryDto>> GetConversationsAsync(int userId)
         {
-            return await _context.Conversations
+            var conversations = await _context.Conversations
                 .AsNoTracking()
                 .Where(c => c.User1Id == userId || c.User2Id == userId)
                 .Select(c => new ConversationSummaryDto
@@ -59,8 +59,11 @@ namespace backend.Services
                         .FirstOrDefault(),
                     UnreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead)
                 })
-                .OrderByDescending(c => c.LastMessage != null ? c.LastMessage.CreatedAt : DateTime.MinValue)
-                .ToListAsync();
+                .ToListAsync(); // materialize first — everything after this runs in-memory, in plain C#
+
+            return conversations
+                .OrderByDescending(c => c.LastMessage?.CreatedAt ?? DateTime.MinValue)
+                .ToList();
         }
 
         public async Task<(GetMessagesResult, List<MessageResponseDto>?)> GetMessagesAsync(int conversationId, int userId)
