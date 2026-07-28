@@ -59,7 +59,7 @@ namespace backend.Services
                         .FirstOrDefault(),
                     UnreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead)
                 })
-                .OrderByDescending(c => c.LastMessage!.CreatedAt)
+                .OrderByDescending(c => c.LastMessage != null ? c.LastMessage.CreatedAt : DateTime.MinValue)
                 .ToListAsync();
         }
 

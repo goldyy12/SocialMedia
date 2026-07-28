@@ -32,7 +32,7 @@ namespace backend.Tests.Services
 
         private static ILogger<AuthService> CreateLogger() => Mock.Of<ILogger<AuthService>>();
 
-        // ---------- RegisterAsync ----------
+
 
         [Fact]
         public async Task RegisterAsync_NewUser_ReturnsSuccess()
