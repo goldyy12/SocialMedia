@@ -271,6 +271,14 @@ export default function Messages() {
                       }`}
                     >
                       {msg.content}
+                      {msg.createdAt && (
+                        <span className="block text-[10px] text-gray-400 mt-1 text-right">
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
