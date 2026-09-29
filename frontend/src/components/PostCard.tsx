@@ -114,42 +114,46 @@ export default function PostCard({
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow mb-4">
-      <div className="flex items-center gap-2 mb-2">
+    <article className="card mb-4 p-6">
+      <div className="mb-3 flex items-center gap-3">
         <img
           src={
             post.profilePic
               ? optimizeCloudinaryUrl(post.profilePic, 80)
               : "/default-avatar.png"
           }
-          width={32}
-          height={32}
+          width={40}
+          height={40}
           alt={`${post.username}'s avatar`}
-          className="w-8 h-8 rounded-full object-cover"
+          className="h-10 w-10 rounded-full object-cover"
         />
-        <span className="font-medium">
-          <a href={`/user/${post.userId}`}>{post.username}</a>
-        </span>
-        <span className="text-gray-400 text-sm ml-auto">
+        <a
+          href={`/user/${post.userId}`}
+          className="text-base font-bold text-ink-deep"
+        >
+          {post.username}
+        </a>
+        <span className="ml-auto text-xs text-steel">
           {new Date(post.createdAt).toLocaleDateString()}
         </span>
         {isOwner && (
           <div className="relative">
             <button
               onClick={() => setOpenMenu(!openMenu)}
-              className="text-gray-400 hover:text-gray-600 px-2"
+              aria-label="Post options"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-steel active:bg-surface-soft"
             >
               •••
             </button>
             {openMenu && (
-              <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-100 rounded-lg shadow-lg z-10">
+              <div className="absolute right-0 z-10 mt-1 w-36 overflow-hidden rounded-xl border border-hairline-soft bg-white shadow-panel">
                 <button
                   onClick={() => {
                     setEditingPostId(post.id);
                     setEditContent(post.content);
                     setOpenMenu(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                  className="w-full px-4 py-2.5 text-left text-sm font-bold text-ink active:bg-surface-soft"
                 >
                   Edit
                 </button>
@@ -158,7 +162,7 @@ export default function PostCard({
                     deletePostMutation.mutate();
                     setOpenMenu(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-50"
+                  className="w-full px-4 py-2.5 text-left text-sm font-bold text-critical active:bg-surface-soft"
                 >
                   Delete
                 </button>
@@ -169,9 +173,9 @@ export default function PostCard({
       </div>
 
       {isEditing ? (
-        <div className="mb-2">
+        <div className="mb-3">
           <textarea
-            className="w-full border rounded p-2 mb-2 text-sm"
+            className="input mb-3 h-auto py-3"
             rows={3}
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
@@ -180,13 +184,13 @@ export default function PostCard({
             <button
               onClick={() => editPostMutation.mutate(editContent)}
               disabled={editPostMutation.isPending}
-              className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg disabled:opacity-50"
+              className="btn-primary btn-compact"
             >
               {editPostMutation.isPending ? "Saving..." : "Save"}
             </button>
             <button
               onClick={() => setEditingPostId(null)}
-              className="px-3 py-1 text-sm bg-gray-200 rounded-lg"
+              className="btn-ghost btn-compact"
             >
               Cancel
             </button>
@@ -194,17 +198,17 @@ export default function PostCard({
         </div>
       ) : (
         <>
-          <p className="mb-2">{post.content}</p>
+          <p className="mb-3 text-base text-ink">{post.content}</p>
           {post.imageUrl && (
             <div
-              className="relative w-full mb-2"
+              className="relative mb-3 w-full overflow-hidden rounded-3xl bg-surface-soft"
               style={{ aspectRatio: "16/9" }}
             >
               <img
                 src={optimizeCloudinaryUrl(post.imageUrl, 700, 394)}
                 fetchPriority="high"
                 alt={`Post by ${post.username}`}
-                className="rounded-lg w-full h-full"
+                className="h-full w-full object-cover"
               />
             </div>
           )}
@@ -213,7 +217,7 @@ export default function PostCard({
 
       <button
         onClick={() => toggleLikeMutation.mutate()}
-        className={`text-sm px-3 py-1 rounded-full border ${post.isLikedByCurrentUser ? "bg-blue-500 text-white border-blue-500" : "text-gray-500 border-gray-300"}`}
+        className={`pill-tab ${post.isLikedByCurrentUser ? "pill-tab-active" : ""}`}
       >
         ♥ {post.likesCount}
       </button>
@@ -222,7 +226,7 @@ export default function PostCard({
         <input
           value={commentText}
           placeholder="Add a comment..."
-          className="w-full border rounded p-2 text-sm"
+          className="search-pill"
           onChange={(e) => setCommentText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleAddComment();
@@ -230,38 +234,40 @@ export default function PostCard({
         />
       </div>
 
-      <div className="mt-4 border-t pt-2 space-y-2">
-        {visibleComments.map((comment) => (
-          <div
-            key={comment.id}
-            className="flex items-start gap-2 bg-gray-50 p-2 rounded"
-          >
-            <img
-              src={comment.profilePic || "/default-avatar.png"}
-              className="w-6 h-6 rounded-full mt-0.5"
-            />
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-gray-800">
-                {comment.username}
+      {comments.length > 0 && (
+        <div className="mt-4 space-y-2 border-t border-hairline-soft pt-4">
+          {visibleComments.map((comment) => (
+            <div
+              key={comment.id}
+              className="flex items-start gap-2 rounded-xl bg-surface-soft p-3"
+            >
+              <img
+                src={comment.profilePic || "/default-avatar.png"}
+                className="mt-0.5 h-6 w-6 rounded-full object-cover"
+              />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-ink-deep">
+                  {comment.username}
+                </span>
+                <p className="text-sm text-charcoal">{comment.content}</p>
+              </div>
+              <span className="ml-auto text-xs text-steel">
+                {new Date(comment.createdAt).toLocaleDateString()}
               </span>
-              <p className="text-sm text-gray-700">{comment.content}</p>
             </div>
-            <span className="text-gray-400 text-xs ml-auto">
-              {new Date(comment.createdAt).toLocaleDateString()}
-            </span>
-          </div>
-        ))}
-        {comments.length > 2 && (
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-sm text-blue-500 hover:underline mt-1"
-          >
-            {isExpanded
-              ? "Show less"
-              : `See ${comments.length - 2} more comments`}
-          </button>
-        )}
-      </div>
-    </div>
+          ))}
+          {comments.length > 2 && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-1 text-sm font-bold text-primary-deep underline-offset-2 hover:underline"
+            >
+              {isExpanded
+                ? "Show less"
+                : `See ${comments.length - 2} more comments`}
+            </button>
+          )}
+        </div>
+      )}
+    </article>
   );
 }

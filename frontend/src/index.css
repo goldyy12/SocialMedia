@@ -1,4 +1,75 @@
 @import "tailwindcss";
 
-/* 1. Tell Tailwind to check for a '.dark' class on the <html> tag */
-@variant dark (&:where(.dark, .dark *));
+/* Meta design tokens (from DESIGN.md) */
+@theme {
+  --color-primary: #0064e0;
+  --color-primary-deep: #0457cb;
+  --color-fb-blue: #1876f2;
+  --color-surface-soft: #f1f4f7;
+  --color-ink-deep: #0a1317;
+  --color-ink: #1c1e21;
+  --color-charcoal: #444950;
+  --color-steel: #5d6c7b;
+  --color-stone: #8595a4;
+  --color-hairline: #ced0d4;
+  --color-hairline-soft: #dee3e9;
+  --color-disabled: #bcc0c4;
+  --color-critical: #e41e3f;
+  --color-critical-strong: #f0284a;
+  --font-sans:
+    "Optimistic VF", Montserrat, Helvetica, Arial, "Noto Sans", sans-serif;
+  --shadow-panel: 0 1px 4px 0 rgba(20, 22, 26, 0.3);
+}
+
+@layer base {
+  body {
+    background: #fff;
+    color: var(--color-ink-deep);
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+  }
+  h1,
+  h2,
+  h3 {
+    font-feature-settings: "ss01", "ss02";
+    font-weight: 500;
+  }
+}
+
+@layer components {
+  /* Buttons: always pills. Black = primary, outlined = secondary */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-black px-7 py-3 text-sm font-bold text-white transition-colors active:bg-charcoal disabled:cursor-not-allowed disabled:bg-disabled;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border-2 border-ink-deep bg-transparent px-6 py-2.5 text-sm font-bold text-ink-deep transition-colors active:bg-surface-soft disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full border-2 border-ink-deep/10 bg-transparent px-5 py-2 text-sm font-bold text-ink-deep transition-colors active:bg-surface-soft;
+  }
+  .btn-compact {
+    @apply px-4 py-1.5;
+  }
+
+  /* Pill tab (inactive / active) */
+  .pill-tab {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-bold text-ink transition-colors;
+  }
+  .pill-tab-active {
+    @apply border-ink-deep bg-ink-deep text-white;
+  }
+
+  /* Inputs: 44px, 8px radius, fb-blue focus */
+  .input {
+    @apply h-11 w-full rounded-lg border border-hairline bg-white px-3 text-base text-ink outline-none placeholder:text-steel focus:border-fb-blue focus:ring-1 focus:ring-fb-blue;
+  }
+  .search-pill {
+    @apply h-10 w-full rounded-full bg-surface-soft px-5 text-sm text-ink outline-none placeholder:text-steel focus:ring-2 focus:ring-fb-blue;
+  }
+
+  /* Cards: flat, hairline border, no heavy shadow */
+  .card {
+    @apply rounded-2xl border border-hairline-soft bg-white;
+  }
+}

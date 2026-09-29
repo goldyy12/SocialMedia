@@ -76,21 +76,21 @@ export default function Profile() {
   });
 
   if (profileLoading || postsLoading)
-    return <p className="text-center mt-8">Loading...</p>;
+    return <p className="mt-8 text-center text-steel">Loading...</p>;
   if (profileError || !profile)
-    return <p className="text-center mt-8">User not found</p>;
+    return <p className="mt-8 text-center text-steel">User not found</p>;
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="relative">
+    <div className="mx-auto max-w-2xl p-4 md:py-8">
+      <div className="card mb-8 rounded-3xl p-8">
+        <div className="flex items-start gap-6">
+          <div className="relative shrink-0">
             <img
               src={imagePreview || profile.profilePic || "/default-avatar.png"}
-              className="w-20 h-20 rounded-full object-cover"
+              className="h-24 w-24 rounded-full object-cover"
             />
             {isEditing && (
-              <label className="absolute bottom-0 right-0 bg-blue-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center cursor-pointer">
+              <label className="absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-ink-deep text-sm font-bold text-white">
                 +
                 <input
                   type="file"
@@ -106,16 +106,16 @@ export default function Profile() {
             )}
           </div>
 
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">{profile.username}</h1>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h1 className="text-3xl">{profile.username}</h1>
               {!isEditing ? (
                 <button
                   onClick={() => {
                     setIsEditing(true);
                     setBio(profile.bio || "");
                   }}
-                  className="text-sm text-blue-500 hover:text-blue-600"
+                  className="btn-secondary btn-compact"
                 >
                   Edit profile
                 </button>
@@ -124,7 +124,7 @@ export default function Profile() {
                   <button
                     onClick={() => editProfileMutation.mutate()}
                     disabled={editProfileMutation.isPending}
-                    className="text-sm bg-blue-500 text-white px-3 py-1 rounded-lg disabled:opacity-50"
+                    className="btn-primary btn-compact"
                   >
                     {editProfileMutation.isPending ? "Saving..." : "Save"}
                   </button>
@@ -134,7 +134,7 @@ export default function Profile() {
                       setImageFile(null);
                       setImagePreview(null);
                     }}
-                    className="text-sm bg-gray-200 px-3 py-1 rounded-lg"
+                    className="btn-ghost btn-compact"
                   >
                     Cancel
                   </button>
@@ -144,36 +144,46 @@ export default function Profile() {
 
             {isEditing ? (
               <textarea
-                className="w-full border rounded p-2 text-sm mt-1"
+                className="input mt-3 h-auto py-3"
                 rows={2}
                 placeholder="Write a bio..."
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
               />
             ) : (
-              <p className="text-gray-500">{profile.bio || "No bio yet"}</p>
+              <p className="mt-1 text-base text-charcoal">
+                {profile.bio || "No bio yet"}
+              </p>
             )}
 
-            <div className="flex gap-4 mt-2 text-sm text-gray-600">
+            <div className="mt-4 flex gap-6 text-sm text-steel">
               <span>
-                <strong>{profile.followersCount}</strong>{" "}
-                <a href="/followers">followers</a>
+                <strong className="text-ink-deep">
+                  {profile.followersCount}
+                </strong>{" "}
+                <a href="/followers" className="underline-offset-2 hover:underline">
+                  followers
+                </a>
               </span>
               <span>
-                <strong>{profile.followingCount}</strong>{" "}
-                <a href="/following">following</a>
+                <strong className="text-ink-deep">
+                  {profile.followingCount}
+                </strong>{" "}
+                <a href="/following" className="underline-offset-2 hover:underline">
+                  following
+                </a>
               </span>
               <span>
-                <strong>{posts.length}</strong> posts
+                <strong className="text-ink-deep">{posts.length}</strong> posts
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      <h2 className="text-xl font-bold mb-4">Posts</h2>
+      <h2 className="mb-4 text-2xl">Posts</h2>
       {posts.length === 0 ? (
-        <p className="text-gray-500">No posts yet.</p>
+        <p className="text-steel">No posts yet.</p>
       ) : (
         posts.map((post) => (
           <PostCard

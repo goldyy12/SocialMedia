@@ -86,29 +86,31 @@ export default function Home() {
   }
 
   if (isLoading)
-    return <p className="text-center mt-8 text-gray-500">Loading...</p>;
+    return <p className="mt-8 text-center text-steel">Loading...</p>;
   if (isError)
     return (
-      <p className="text-center mt-8 text-red-500">Failed to load posts.</p>
+      <p className="mt-8 text-center text-critical">
+        Couldn't load posts. Refresh the page to try again.
+      </p>
     );
 
   return (
-    <div className="max-w-5xl mx-auto p-4 flex gap-6">
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Feed</h1>
+    <div className="mx-auto flex max-w-5xl gap-8 p-4 md:py-8">
+      <div className="min-w-0 flex-1">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-4xl">Feed</h1>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+            className={showForm ? "btn-secondary" : "btn-primary"}
           >
-            {showForm ? "Cancel" : "New Post"}
+            {showForm ? "Cancel" : "New post"}
           </button>
         </div>
 
         {showForm && (
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
+          <div className="card mb-6 p-6">
             <textarea
-              className="w-full border rounded p-2 mb-2"
+              className="input mb-3 h-auto py-3"
               rows={3}
               placeholder="What's on your mind?"
               value={content}
@@ -117,7 +119,7 @@ export default function Home() {
             <input
               type="file"
               accept="image/*"
-              className="text-sm text-gray-500 mb-2"
+              className="mb-3 block text-sm text-steel file:mr-3 file:rounded-full file:border-2 file:border-ink-deep/10 file:bg-white file:px-4 file:py-1.5 file:text-sm file:font-bold file:text-ink-deep"
               onChange={(e) => {
                 const file = e.target.files?.[0] || null;
                 setImageFile(file);
@@ -125,17 +127,17 @@ export default function Home() {
               }}
             />
             {imagePreview && (
-              <div className="relative mb-2">
+              <div className="relative mb-3">
                 <img
                   src={imagePreview}
-                  className="rounded-lg w-full object-cover max-h-64"
+                  className="max-h-64 w-full rounded-3xl object-cover"
                 />
                 <button
                   onClick={() => {
                     setImageFile(null);
                     setImagePreview(null);
                   }}
-                  className="absolute top-1 right-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full"
+                  className="absolute right-3 top-3 rounded-full bg-ink-deep/70 px-3 py-1 text-xs font-bold text-white"
                 >
                   Remove
                 </button>
@@ -144,7 +146,7 @@ export default function Home() {
             <button
               onClick={() => addPostMutation.mutate()}
               disabled={addPostMutation.isPending}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+              className="btn-primary"
             >
               {addPostMutation.isPending ? "Posting..." : "Post"}
             </button>
@@ -152,7 +154,7 @@ export default function Home() {
         )}
 
         {posts.length === 0 ? (
-          <p className="text-gray-500">No posts yet.</p>
+          <p className="text-steel">No posts yet. Be the first to share something.</p>
         ) : (
           posts.map((post) => (
             <PostCard
@@ -165,66 +167,66 @@ export default function Home() {
         )}
       </div>
 
-      <div className="w-72 shrink-0 hidden lg:block">
-        <div className="relative mb-6">
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {searchedUsers.length > 0 && searchQuery.length > 0 && (
-            <div className="absolute top-full mt-1 left-0 w-full bg-white border border-gray-100 rounded-xl shadow-lg z-20">
-              {searchedUsers.map((u) => (
-                <a
-                  key={u.id}
-                  href={`/user/${u.id}`}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
-                >
+      <aside className="hidden w-80 shrink-0 lg:block">
+        <div className="sticky top-24">
+          <div className="relative mb-6">
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-pill"
+            />
+            {searchedUsers.length > 0 && searchQuery.length > 0 && (
+              <div className="absolute left-0 top-full z-20 mt-2 w-full overflow-hidden rounded-2xl border border-hairline-soft bg-white shadow-panel">
+                {searchedUsers.map((u) => (
+                  <a
+                    key={u.id}
+                    href={`/user/${u.id}`}
+                    className="flex items-center gap-3 px-4 py-2.5 active:bg-surface-soft"
+                  >
+                    <img
+                      src={u.profilePic || "/default-avatar.png"}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                    <p className="text-sm font-bold text-ink-deep">
+                      {u.username}
+                    </p>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="card p-6">
+            <h2 className="mb-4 text-xl">Who to follow</h2>
+            <div className="flex flex-col gap-4">
+              {availableFriends.slice(0, 5).map((friend: Friend) => (
+                <div key={friend.id} className="flex items-center gap-3">
                   <img
-                    src={u.profilePic || "/default-avatar.png"}
-                    className="w-8 h-8 rounded-full object-cover"
+                    src={friend.profilePic || "/default-avatar.png"}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
                   />
-                  <p className="text-sm font-medium text-gray-900">
-                    {u.username}
-                  </p>
-                </a>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-ink-deep">
+                      {friend.username}
+                    </p>
+                    <p className="truncate text-xs text-steel">
+                      {friend.bio || "No bio"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => followMutation.mutate(friend.id)}
+                    className="btn-secondary btn-compact shrink-0"
+                  >
+                    Follow
+                  </button>
+                </div>
               ))}
             </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <p className="text-sm font-medium text-gray-900 mb-3">
-            Who to follow
-          </p>
-          <div className="flex flex-col gap-3">
-            {availableFriends.slice(0, 5).map((friend: Friend) => (
-              <div key={friend.id} className="flex items-center gap-3">
-                <img
-                  src={friend.profilePic || "/default-avatar.png"}
-                  className="w-9 h-9 rounded-full object-cover shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {friend.username}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {friend.bio || "No bio"}
-                  </p>
-                </div>
-                <button
-                  onClick={() => followMutation.mutate(friend.id)}
-                  className="text-xs bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 shrink-0"
-                >
-                  Follow
-                </button>
-              </div>
-            ))}
           </div>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }
