@@ -57,7 +57,10 @@
     @apply inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-bold text-ink transition-colors;
   }
   .pill-tab-active {
-    @apply border-ink-deep bg-ink-deep text-white;
+    @apply border-primary bg-primary text-white;
+  }
+  .pill-tab-soft {
+    @apply border-transparent bg-primary/10 text-primary-deep;
   }
 
   /* Inputs: 44px, 8px radius, fb-blue focus */

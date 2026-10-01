@@ -38,7 +38,7 @@ const Navbar = () => {
   const tabClass = (active: boolean) =>
     `pill-tab w-full md:w-auto justify-start md:justify-center ${
       active
-        ? "pill-tab-active"
+        ? "pill-tab-soft"
         : "border-transparent text-charcoal active:bg-surface-soft"
     }`;
 
@@ -67,10 +67,7 @@ const Navbar = () => {
 
         {!user ? (
           <div className="flex h-16 items-center">
-            <button
-              onClick={() => navigate("/login")}
-              className="btn-primary"
-            >
+            <button onClick={() => navigate("/login")} className="btn-primary">
               Log in
             </button>
           </div>
