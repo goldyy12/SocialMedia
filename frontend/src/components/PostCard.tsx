@@ -1,11 +1,7 @@
 import { useState } from "react";
 import api from "../Api";
 import type { Post, Comment } from "../types/Home";
-import {
-  useMutation,
-  useQueryClient,
-  type QueryKey,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 function optimizeCloudinaryUrl(url: string, width = 700, height = 394): string {
   if (!url?.includes("res.cloudinary.com")) return url;
@@ -15,17 +11,18 @@ function optimizeCloudinaryUrl(url: string, width = 700, height = 394): string {
   );
 }
 
+// Every cache that holds a list of posts. Prefix matching means
+// ["userPosts"] also covers ["userPosts", 4], ["userPosts", 7], ...
+const POST_LIST_KEYS = [["posts"], ["userPosts"]];
+
 interface PostCardProps {
   post: Post;
-  queryKey: QueryKey;
+  /** No longer needed: all post lists are kept in sync. Kept so old callers still compile. */
+  queryKey?: unknown;
   currentUserId?: string | number;
 }
 
-export default function PostCard({
-  post,
-  queryKey,
-  currentUserId,
-}: PostCardProps) {
+export default function PostCard({ post, currentUserId }: PostCardProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
@@ -38,53 +35,74 @@ export default function PostCard({
   const comments = post.comments || [];
   const visibleComments = isExpanded ? comments : comments.slice(0, 2);
 
+  // Apply a change to this post in every cached post list.
+  const updateAllLists = (updater: (posts: Post[]) => Post[]) => {
+    POST_LIST_KEYS.forEach((key) =>
+      queryClient.setQueriesData<Post[]>({ queryKey: key }, (old) =>
+        old ? updater(old) : old,
+      ),
+    );
+  };
+  const mapPost = (fn: (p: Post) => Post) => (posts: Post[]) =>
+    posts.map((p) => (p.id === post.id ? fn(p) : p));
+
+  // Refetch from the server so counts/flags can't stay stale.
+  const refreshAllLists = () =>
+    POST_LIST_KEYS.forEach((key) =>
+      queryClient.invalidateQueries({ queryKey: key }),
+    );
+
   const toggleLikeMutation = useMutation({
     mutationFn: () =>
       post.isLikedByCurrentUser
         ? api.delete(`/like/${post.id}`)
         : api.post(`/like/${post.id}`),
-    onMutate: () => {
-      const previous = queryClient.getQueryData<Post[]>(queryKey);
-      queryClient.setQueryData<Post[]>(queryKey, (prev = []) =>
-        prev.map((p) =>
-          p.id === post.id
-            ? {
-                ...p,
-                likesCount: p.isLikedByCurrentUser
-                  ? p.likesCount - 1
-                  : p.likesCount + 1,
-                isLikedByCurrentUser: !p.isLikedByCurrentUser,
-              }
-            : p,
+    onMutate: async () => {
+      await Promise.all(
+        POST_LIST_KEYS.map((key) =>
+          queryClient.cancelQueries({ queryKey: key }),
         ),
       );
-      return { previous };
+      const snapshots = POST_LIST_KEYS.flatMap((key) =>
+        queryClient.getQueriesData<Post[]>({ queryKey: key }),
+      );
+      updateAllLists(
+        mapPost((p) => ({
+          ...p,
+          likesCount: p.isLikedByCurrentUser
+            ? p.likesCount - 1
+            : p.likesCount + 1,
+          isLikedByCurrentUser: !p.isLikedByCurrentUser,
+        })),
+      );
+      return { snapshots };
     },
     onError: (_err, _vars, context) => {
-      queryClient.setQueryData(queryKey, context?.previous);
+      context?.snapshots.forEach(([key, data]) =>
+        queryClient.setQueryData(key, data),
+      );
     },
+    onSettled: refreshAllLists,
   });
 
   const deletePostMutation = useMutation({
     mutationFn: () => api.delete(`/post/${post.id}`),
     onSuccess: () => {
-      queryClient.setQueryData<Post[]>(queryKey, (prev = []) =>
-        prev.filter((p) => p.id !== post.id),
-      );
+      updateAllLists((posts) => posts.filter((p) => p.id !== post.id));
     },
+    onSettled: refreshAllLists,
   });
 
   const editPostMutation = useMutation({
     mutationFn: (content: string) => api.put(`/post/${post.id}`, { content }),
     onSuccess: (response) => {
-      queryClient.setQueryData<Post[]>(queryKey, (prev = []) =>
-        prev.map((p) =>
-          p.id === post.id ? { ...p, content: response.data.content } : p,
-        ),
+      updateAllLists(
+        mapPost((p) => ({ ...p, content: response.data.content })),
       );
       setEditingPostId(null);
       setEditContent("");
     },
+    onSettled: refreshAllLists,
   });
 
   const addCommentMutation = useMutation({
@@ -92,14 +110,14 @@ export default function PostCard({
       api.post(`/comment/${post.id}`, { content: text }),
     onSuccess: (response) => {
       const newComment: Comment = response.data;
-      queryClient.setQueryData<Post[]>(queryKey, (prev = []) =>
-        prev.map((p) =>
-          p.id === post.id
-            ? { ...p, comments: [...(p.comments || []), newComment] }
-            : p,
-        ),
+      updateAllLists(
+        mapPost((p) => ({
+          ...p,
+          comments: [...(p.comments || []), newComment],
+        })),
       );
     },
+    onSettled: refreshAllLists,
   });
 
   const handleAddComment = () => {
