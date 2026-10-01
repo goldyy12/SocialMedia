@@ -4,6 +4,7 @@ using backend.DTOs;
 using backend.Interfaces;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace backend.Services
 {
@@ -43,63 +44,56 @@ namespace backend.Services
                 ProfilePic = user.ProfilePic
             };
         }
+        private static Expression<Func<Post, PostResponseDto>> ToDto(int currentUserId) =>
+    p => new PostResponseDto
+    {
+        Id = p.Id,
+        Content = p.Content,
+        ImageUrl = p.ImageUrl,
+        CreatedAt = p.CreatedAt,
+        UserId = p.UserId,
+        Username = p.User.Username,
+        ProfilePic = p.User.ProfilePic,
+        LikesCount = p.Likes.Count,
+        IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == currentUserId),
+        Comments = p.Comments
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new CommentResponseDto
+            {
+                Id = c.Id,
+                Content = c.Content,
+                CreatedAt = c.CreatedAt,
+                UserId = c.UserId,
+                Username = c.User.Username,
+                ProfilePic = c.User.ProfilePic
+            }).ToList()
+    };
+
 
         public async Task<List<PostResponseDto>> GetFeedAsync(int currentUserId)
         {
             return await _context.Posts
                 .AsNoTracking()
-                .OrderByDescending(p => p.CreatedAt)
                 .Where(p =>
                     _context.Follows.Any(f =>
                         f.FollowerId == currentUserId &&
                         f.FollowingId == p.UserId &&
                         f.Status == "accepted")
                     || p.UserId == currentUserId)
-                .Select(p => new PostResponseDto
-                {
-                    Id = p.Id,
-                    Content = p.Content,
-                    ImageUrl = p.ImageUrl,
-                    CreatedAt = p.CreatedAt,
-                    UserId = p.UserId,
-                    Username = p.User.Username,
-                    ProfilePic = p.User.ProfilePic,
-                    LikesCount = p.Likes.Count,
-                    IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == currentUserId),
-                    Comments = p.Comments
-                        .OrderByDescending(c => c.CreatedAt)
-                        .Select(c => new CommentResponseDto
-                        {
-                            Id = c.Id,
-                            Content = c.Content,
-                            CreatedAt = c.CreatedAt,
-                            UserId = c.UserId,
-                            Username = c.User.Username,
-                            ProfilePic = c.User.ProfilePic
-                        }).ToList()
-                })
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(ToDto(currentUserId))
                 .ToListAsync();
         }
 
-        public async Task<List<PostResponseDto>> GetPostsByUserAsync(int userId)
+        public async Task<List<PostResponseDto>> GetPostsByUserAsync(int profileUserId, int currentUserId)
         {
             return await _context.Posts
                 .AsNoTracking()
-                .Where(p => p.UserId == userId)
+                .Where(p => p.UserId == profileUserId)
                 .OrderByDescending(p => p.CreatedAt)
-                .Select(p => new PostResponseDto
-                {
-                    Id = p.Id,
-                    Content = p.Content,
-                    ImageUrl = p.ImageUrl,
-                    CreatedAt = p.CreatedAt,
-                    UserId = p.UserId,
-                    Username = p.User.Username,
-                    ProfilePic = p.User.ProfilePic
-                })
+                .Select(ToDto(currentUserId))
                 .ToListAsync();
         }
-
         public async Task<bool?> DeletePostAsync(int postId, int userId)
         {
             var post = await _context.Posts.FindAsync(postId);
