@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../Api";
 import type { Post } from "../types/Home";
 import { useAuth } from "../context/useAuth";
@@ -31,7 +31,15 @@ export default function UserProfile() {
   const numericId = Number(id);
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const isOwner = user?.userId === numericId;
+  const navigate = useNavigate();
+  const startConversation = async () => {
+    const response = await api.post(`/conversations/${numericId}`);
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    navigate("/messages", {
+      state: { conversationId: response.data.conversationId },
+    });
+  };
+  const isOwner = Number(user?.userId) === numericId;
   const {
     data: profile,
     isLoading: profileLoading,
@@ -83,23 +91,25 @@ export default function UserProfile() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h1 className="text-3xl">{profile.username}</h1>
-              <button
-                onClick={() => toggleFollow()}
-                disabled={isPending}
-                className={`btn-compact ${
-                  profile.isFollowing ? "btn-secondary" : "btn-primary"
-                }`}
-              >
-                {followLabel}
-              </button>
-              {!isOwner && (
-                <a
-                  href={`/conversations/${numericId}`}
-                  className="btn-compact btn-secondary"
+              <div className="flex gap-2">
+                {!isOwner && (
+                  <button
+                    onClick={startConversation}
+                    className="btn-ghost btn-compact"
+                  >
+                    Message
+                  </button>
+                )}
+                <button
+                  onClick={() => toggleFollow()}
+                  disabled={isPending}
+                  className={`btn-compact ${
+                    profile.isFollowing ? "btn-secondary" : "btn-primary"
+                  }`}
                 >
-                  Send Message
-                </a>
-              )}
+                  {followLabel}
+                </button>
+              </div>
             </div>
             <p className="mt-1 text-base text-charcoal">
               {profile.bio || "No bio yet"}
