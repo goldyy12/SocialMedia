@@ -34,6 +34,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
   const isEditing = editingPostId === post.id;
   const comments = post.comments || [];
   const visibleComments = isExpanded ? comments : comments.slice(0, 2);
+  const profileHref = isOwner ? "/myprofile" : `/user/${post.userId}`;
 
   // Apply a change to this post in every cached post list.
   const updateAllLists = (updater: (posts: Post[]) => Post[]) => {
@@ -43,6 +44,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
       ),
     );
   };
+
   const mapPost = (fn: (p: Post) => Post) => (posts: Post[]) =>
     posts.map((p) => (p.id === post.id ? fn(p) : p));
 
@@ -145,12 +147,10 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
           alt={`${post.username}'s avatar`}
           className="h-10 w-10 rounded-full object-cover"
         />
-        <a
-          href={`/user/${post.userId}`}
-          className="text-base font-bold text-ink-deep"
-        >
+        <a href={profileHref} className="text-base font-bold text-ink-deep">
           {post.username}
         </a>
+
         <span className="ml-auto text-xs text-steel">
           {new Date(post.createdAt).toLocaleDateString()}
         </span>
