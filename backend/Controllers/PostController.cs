@@ -46,7 +46,7 @@ namespace backend.Controllers
             int? userId = User.GetCurrentUserId();
             if (userId == null) return Unauthorized("Invalid user ID in token");
 
-            var posts = await _postService.GetPostsByUserAsync(id);
+            var posts = await _postService.GetPostsByUserAsync(id, userId.Value);
             return Ok(posts);
         }
 
