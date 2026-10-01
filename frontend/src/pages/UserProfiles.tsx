@@ -31,7 +31,7 @@ export default function UserProfile() {
   const numericId = Number(id);
   const { user } = useAuth();
   const queryClient = useQueryClient();
-
+  const isOwner = user?.userId === numericId;
   const {
     data: profile,
     isLoading: profileLoading,
@@ -92,6 +92,14 @@ export default function UserProfile() {
               >
                 {followLabel}
               </button>
+              {!isOwner && (
+                <a
+                  href={`/conversations/${numericId}`}
+                  className="btn-compact btn-secondary"
+                >
+                  Send Message
+                </a>
+              )}
             </div>
             <p className="mt-1 text-base text-charcoal">
               {profile.bio || "No bio yet"}
