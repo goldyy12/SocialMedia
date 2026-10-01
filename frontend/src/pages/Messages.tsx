@@ -7,6 +7,7 @@ import {
   IncomingMessageSchema,
   MessageContentSchema,
 } from "../schemas/messages";
+import { useLocation } from "react-router-dom";
 
 interface Conversation {
   id: number;
@@ -55,10 +56,14 @@ async function fetchMessages(conversationId: number): Promise<Message[]> {
 
 export default function Messages() {
   const { user } = useAuth();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [selectedConversationId, setSelectedConversationId] = useState<
     number | null
-  >(null);
+  >(
+    (location.state as { conversationId?: number } | null)?.conversationId ??
+      null,
+  );
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
