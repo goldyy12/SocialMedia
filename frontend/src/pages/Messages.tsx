@@ -92,7 +92,7 @@ export default function Messages() {
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
-  // inside Messages component, add this useEffect:
+
   useEffect(() => {
     if (!user?.userId) return;
 
@@ -151,79 +151,83 @@ export default function Messages() {
     (c) => c.id === selectedConversationId,
   );
 
-  if (isLoading) return <p className="text-center mt-8">Loading...</p>;
+  if (isLoading)
+    return <p className="mt-8 text-center text-steel">Loading...</p>;
 
   const showChat = !!selectedConversationId;
 
   return (
-    <div className="h-[calc(100vh-56px)] flex">
+    <div className="mx-auto flex h-[calc(100vh-64px)] max-w-5xl">
+      {/* Conversation list */}
       <div
-        className={`${showChat ? "hidden md:flex" : "flex"} w-full md:w-72 flex-col border-r border-gray-100 bg-white`}
+        className={`${showChat ? "hidden md:flex" : "flex"} w-full flex-col border-r border-hairline-soft bg-white md:w-80`}
       >
-        <div className="p-4 border-b border-gray-100">
-          <h1 className="text-xl font-medium">Messages</h1>
+        <div className="border-b border-hairline-soft p-5">
+          <h1 className="text-2xl">Messages</h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
+        <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
           {following.length > 0 && (
             <div>
-              <p className="text-xs text-gray-400 mb-2">New chat</p>
-              <div className="flex gap-3 overflow-x-auto pb-1">
+              <p className="mb-3 text-sm font-bold text-steel">New chat</p>
+              <div className="flex gap-4 overflow-x-auto pb-1">
                 {following.map((u) => (
-                  <div
+                  <button
                     key={u.followingId}
                     onClick={() => startConversation(u.followingId)}
-                    className="flex flex-col items-center gap-1 cursor-pointer shrink-0"
+                    className="flex shrink-0 flex-col items-center gap-1.5"
                   >
                     <img
                       src={u.profilePic || "/default-avatar.png"}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-gray-100"
+                      className="h-14 w-14 rounded-full border-2 border-hairline-soft object-cover"
                     />
-                    <p className="text-xs text-gray-600 max-w-[52px] truncate text-center">
+                    <span className="max-w-14 truncate text-center text-xs text-charcoal">
                       {u.username}
-                    </p>
-                  </div>
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
           <div>
-            <p className="text-xs text-gray-400 mb-2">Recent</p>
+            <p className="mb-3 text-sm font-bold text-steel">Recent</p>
             {conversations.length === 0 ? (
-              <p className="text-sm text-gray-400">No conversations yet.</p>
+              <p className="text-sm text-steel">
+                No conversations yet. Pick someone above to start one.
+              </p>
             ) : (
               <div className="flex flex-col gap-1">
                 {conversations.map((conv) => (
-                  <div
+                  <button
                     key={conv.id}
                     onClick={() => setSelectedConversationId(conv.id)}
-                    className={`flex items-center gap-3 rounded-xl p-3 cursor-pointer transition-colors ${
+                    className={`flex items-center gap-3 rounded-2xl p-3 text-left transition-colors ${
                       selectedConversationId === conv.id
-                        ? "bg-blue-50 border border-blue-100"
-                        : "hover:bg-gray-50 border border-transparent"
+                        ? "bg-surface-soft"
+                        : "active:bg-surface-soft"
                     }`}
                   >
                     <img
                       src={conv.otherUser.profilePic || "/default-avatar.png"}
-                      className="w-11 h-11 rounded-full object-cover shrink-0"
+                      className="h-12 w-12 shrink-0 rounded-full object-cover"
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-ink-deep">
                         {conv.otherUser.username}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="truncate text-xs text-steel">
                         {conv.lastMessage
                           ? conv.lastMessage.content
                           : "No messages yet"}
                       </p>
                     </div>
                     {conv.unreadCount > 0 && (
-                      <span className="w-5 h-5 bg-blue-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center shrink-0">
+                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-ink-deep px-1.5 text-[11px] font-bold text-white">
                         {conv.unreadCount}
                       </span>
                     )}
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -231,15 +235,17 @@ export default function Messages() {
         </div>
       </div>
 
+      {/* Chat pane */}
       <div
         className={`${showChat ? "flex" : "hidden md:flex"} flex-1 flex-col bg-white`}
       >
         {selectedConversation ? (
           <>
-            <div className="flex items-center gap-3 p-4 border-b border-gray-100">
+            <div className="flex items-center gap-3 border-b border-hairline-soft p-4">
               <button
                 onClick={() => setSelectedConversationId(null)}
-                className="md:hidden text-gray-500 hover:text-gray-700 mr-1"
+                aria-label="Back to conversations"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline text-ink md:hidden"
               >
                 ←
               </button>
@@ -248,14 +254,14 @@ export default function Messages() {
                   selectedConversation.otherUser.profilePic ||
                   "/default-avatar.png"
                 }
-                className="w-9 h-9 rounded-full object-cover"
+                className="h-10 w-10 rounded-full object-cover"
               />
-              <p className="font-medium text-gray-900">
+              <p className="text-base font-bold text-ink-deep">
                 {selectedConversation.otherUser.username}
               </p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+            <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-5">
               {messages.map((msg) => {
                 const isMe = msg.senderId === Number(user?.userId);
                 return (
@@ -264,23 +270,13 @@ export default function Messages() {
                     className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm ${
+                      className={`max-w-[75%] rounded-3xl px-4 py-2.5 text-sm ${
                         isMe
-                          ? "bg-blue-500 text-white rounded-br-sm"
-                          : "bg-gray-100 text-gray-900 rounded-bl-sm"
+                          ? "rounded-br-lg bg-primary text-white"
+                          : "rounded-bl-lg bg-surface-soft text-ink-deep"
                       }`}
                     >
                       {msg.content}
-                      {msg.createdAt && (
-                        <span className="block text-[10px] text-gray-400 mt-1 text-right">
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            day: "2-digit",
-                            month: "2-digit",
-                          })}
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
@@ -288,8 +284,7 @@ export default function Messages() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* input */}
-            <div className="p-3 border-t border-gray-100 flex gap-2">
+            <div className="flex gap-2 border-t border-hairline-soft p-4">
               <input
                 type="text"
                 value={messageText}
@@ -300,22 +295,20 @@ export default function Messages() {
                   }
                 }}
                 placeholder="Type a message..."
-                className="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-300"
+                className="input rounded-full px-5"
               />
               <button
-                onClick={() => {
-                  handleSend();
-                }}
+                onClick={handleSend}
                 disabled={sendMessageMutation.isPending}
-                className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm hover:bg-blue-600 disabled:opacity-50 shrink-0"
+                className="btn-primary shrink-0"
               >
                 Send
               </button>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-400 text-sm">
+          <div className="flex flex-1 items-center justify-center">
+            <p className="text-sm text-steel">
               Select a conversation to start chatting
             </p>
           </div>

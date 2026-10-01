@@ -97,15 +97,13 @@ const Navbar = () => {
               title="Notifications"
               className={tabClass(location.pathname === "/notifications")}
             >
-              <span className="relative">
-                <i className="ti ti-bell text-lg" />
-                {unreadCount > 0 && (
-                  <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] font-bold text-white">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </span>
+              <i className="ti ti-bell text-lg" />
               <span>Notifications</span>
+              {unreadCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-critical px-1.5 text-[11px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
 
             <div className="mx-1 hidden h-5 w-px bg-hairline-soft md:block" />
