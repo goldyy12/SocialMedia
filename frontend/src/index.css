@@ -43,7 +43,7 @@
     @apply inline-flex items-center justify-center rounded-full bg-primary px-7 py-3 text-sm font-bold text-white transition-colors active:bg-primary-deep disabled:cursor-not-allowed disabled:bg-disabled;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border-2 border-ink-deep bg-transparent px-6 py-2.5 text-sm font-bold text-ink-deep transition-colors active:bg-surface-soft disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full border-2 border-primary bg-transparent px-6 py-2.5 text-sm font-bold text-primary-deep transition-colors active:bg-primary/10 disabled:opacity-50;
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center rounded-full border-2 border-ink-deep/10 bg-transparent px-5 py-2 text-sm font-bold text-ink-deep transition-colors active:bg-surface-soft;
