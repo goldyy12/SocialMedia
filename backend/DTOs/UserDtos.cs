@@ -17,6 +17,7 @@ namespace backend.DTOs
         public DateTime CreatedAt { get; set; }
         public int FollowersCount { get; set; }
         public int FollowingCount { get; set; }
+        public int PostsCount { get; set; }
         public string? IsFollowing { get; set; }
     }
 }

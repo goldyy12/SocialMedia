@@ -3,7 +3,7 @@ namespace backend.Models
     public class Follow
     {
         public int Id { get; set; }
-        public string Status { get; set; } = "pending";
+        public string Status { get; set; } = FollowStatus.Pending;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public int FollowerId { get; set; }

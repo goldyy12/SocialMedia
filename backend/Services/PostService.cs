@@ -70,30 +70,63 @@ namespace backend.Services
     };
 
 
-        public async Task<List<PostResponseDto>> GetFeedAsync(int currentUserId)
+        public const int DefaultPageSize = 20;
+        public const int MaxPageSize = 50;
+
+        public async Task<List<PostResponseDto>> GetFeedAsync(int currentUserId, int? beforeId = null, int limit = DefaultPageSize)
         {
-            return await _context.Posts
+            var query = _context.Posts
                 .AsNoTracking()
                 .Where(p =>
                     _context.Follows.Any(f =>
                         f.FollowerId == currentUserId &&
                         f.FollowingId == p.UserId &&
-                        f.Status == "accepted")
-                    || p.UserId == currentUserId)
+                        f.Status == FollowStatus.Accepted)
+                    || p.UserId == currentUserId);
+
+            return await PageAsync(query, currentUserId, beforeId, limit);
+        }
+
+        public async Task<List<PostResponseDto>> GetPostsByUserAsync(int profileUserId, int currentUserId, int? beforeId = null, int limit = DefaultPageSize)
+        {
+            var query = _context.Posts
+                .AsNoTracking()
+                .Where(p => p.UserId == profileUserId);
+
+            return await PageAsync(query, currentUserId, beforeId, limit);
+        }
+
+        // Keyset (cursor) pagination: newest first, ordered by (CreatedAt, Id).
+        // `beforeId` is the id of the last post the client already has; we return
+        // the posts that come after it. Unlike Skip/Take, new posts arriving at the
+        // top don't shift pages and cause duplicates.
+        private async Task<List<PostResponseDto>> PageAsync(IQueryable<Post> query, int currentUserId, int? beforeId, int limit)
+        {
+            limit = Math.Clamp(limit, 1, MaxPageSize);
+
+            if (beforeId.HasValue)
+            {
+                var cursor = await _context.Posts
+                    .AsNoTracking()
+                    .Where(p => p.Id == beforeId.Value)
+                    .Select(p => new { p.Id, p.CreatedAt })
+                    .FirstOrDefaultAsync();
+
+                if (cursor == null) return new List<PostResponseDto>();
+
+                query = query.Where(p =>
+                    p.CreatedAt < cursor.CreatedAt ||
+                    (p.CreatedAt == cursor.CreatedAt && p.Id < cursor.Id));
+            }
+
+            return await query
                 .OrderByDescending(p => p.CreatedAt)
+                .ThenByDescending(p => p.Id)
+                .Take(limit)
                 .Select(ToDto(currentUserId))
                 .ToListAsync();
         }
 
-        public async Task<List<PostResponseDto>> GetPostsByUserAsync(int profileUserId, int currentUserId)
-        {
-            return await _context.Posts
-                .AsNoTracking()
-                .Where(p => p.UserId == profileUserId)
-                .OrderByDescending(p => p.CreatedAt)
-                .Select(ToDto(currentUserId))
-                .ToListAsync();
-        }
         public async Task<bool?> DeletePostAsync(int postId, int userId)
         {
             var post = await _context.Posts.FindAsync(postId);
@@ -114,7 +147,8 @@ namespace backend.Services
             var user = await _context.Users.FindAsync(userId);
 
             post.Content = dto.Content;
-            post.ImageUrl = dto.ImageUrl;
+            // The edit form only sends text — don't wipe an existing image.
+            if (dto.ImageUrl != null) post.ImageUrl = dto.ImageUrl;
             await _context.SaveChangesAsync();
 
             return (UpdatePostResult.Success, new PostResponseDto
@@ -125,7 +159,9 @@ namespace backend.Services
                 CreatedAt = post.CreatedAt,
                 UserId = post.UserId,
                 Username = user!.Username,
-                ProfilePic = user.ProfilePic
+                ProfilePic = user.ProfilePic,
+                LikesCount = await _context.Likes.CountAsync(l => l.PostId == post.Id),
+                IsLikedByCurrentUser = await _context.Likes.AnyAsync(l => l.PostId == post.Id && l.UserId == userId)
             });
         }
     }

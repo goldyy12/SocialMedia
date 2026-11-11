@@ -139,5 +139,55 @@ namespace backend.Tests.Services
             Assert.Equal("New Content", updatedPost.Content);
         }
 
+    
+        [Fact]
+        public async Task GetFeedAsync_Paginates_NewestFirst_WithoutOverlap()
+        {
+            using var context = CreateContext();
+            context.Users.Add(new User { Id = 1, Username = "user1", CreatedAt = DateTime.UtcNow });
+            var start = DateTime.UtcNow.AddHours(-1);
+            for (int i = 1; i <= 5; i++)
+                context.Posts.Add(new Post { Id = i, UserId = 1, Content = $"Post {i}", CreatedAt = start.AddMinutes(i) });
+            await context.SaveChangesAsync();
+
+            var service = new PostService(context);
+            var page1 = await service.GetFeedAsync(currentUserId: 1, beforeId: null, limit: 2);
+            var page2 = await service.GetFeedAsync(currentUserId: 1, beforeId: page1[^1].Id, limit: 2);
+            var page3 = await service.GetFeedAsync(currentUserId: 1, beforeId: page2[^1].Id, limit: 2);
+
+            Assert.Equal(new[] { 5, 4 }, page1.Select(p => p.Id));
+            Assert.Equal(new[] { 3, 2 }, page2.Select(p => p.Id));
+            Assert.Equal(new[] { 1 }, page3.Select(p => p.Id));
+        }
+
+        [Fact]
+        public async Task GetPostsByUserAsync_LimitIsClampedToMaxPageSize()
+        {
+            using var context = CreateContext();
+            context.Users.Add(new User { Id = 1, Username = "user1", CreatedAt = DateTime.UtcNow });
+            for (int i = 1; i <= PostService.MaxPageSize + 5; i++)
+                context.Posts.Add(new Post { Id = i, UserId = 1, Content = "x", CreatedAt = DateTime.UtcNow.AddSeconds(i) });
+            await context.SaveChangesAsync();
+
+            var service = new PostService(context);
+            var result = await service.GetPostsByUserAsync(profileUserId: 1, currentUserId: 1, beforeId: null, limit: 10_000);
+
+            Assert.Equal(PostService.MaxPageSize, result.Count);
+        }
+
+        [Fact]
+        public async Task UpdatePostAsync_TextOnlyEdit_KeepsExistingImage()
+        {
+            using var context = CreateContext();
+            context.Users.Add(new User { Id = 1, Username = "user1", CreatedAt = DateTime.UtcNow });
+            context.Posts.Add(new Post { Id = 1, UserId = 1, Content = "Old", ImageUrl = "https://img/1.png", CreatedAt = DateTime.UtcNow });
+            await context.SaveChangesAsync();
+
+            var service = new PostService(context);
+            var (result, updated) = await service.UpdatePostAsync(postId: 1, userId: 1, new DTOs.PostDto { Content = "New" });
+
+            Assert.Equal(UpdatePostResult.Success, result);
+            Assert.Equal("https://img/1.png", updated!.ImageUrl);
+        }
     }
 }

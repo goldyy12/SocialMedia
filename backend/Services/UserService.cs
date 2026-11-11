@@ -2,6 +2,7 @@
 using backend.Data;
 using backend.DTOs;
 using backend.Interfaces;
+using backend.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
@@ -62,8 +63,9 @@ namespace backend.Services
                     ProfilePic = u.ProfilePic,
                     Bio = u.Bio,
                     CreatedAt = u.CreatedAt,
-                    FollowersCount = u.Followers.Count(f => f.Status == "accepted"),
-                    FollowingCount = u.Following.Count(f => f.Status == "accepted"),
+                    FollowersCount = u.Followers.Count(f => f.Status == FollowStatus.Accepted),
+                    FollowingCount = u.Following.Count(f => f.Status == FollowStatus.Accepted),
+                    PostsCount = u.Posts.Count,
                     IsFollowing = u.Followers
                         .Where(f => f.FollowerId == currentUserId)
                         .Select(f => f.Status)

@@ -28,7 +28,7 @@ namespace backend.Services
             {
                 FollowerId = userId,
                 FollowingId = targetUserId,
-                Status = "pending",
+                Status = FollowStatus.Pending,
                 CreatedAt = DateTime.UtcNow
             });
 
@@ -41,7 +41,7 @@ namespace backend.Services
             var follow = await _context.Follows
                 .FirstOrDefaultAsync(f => f.FollowerId == followerId && f.FollowingId == userId);
             if (follow == null) return AcceptFollowResult.NotFound;
-            if (follow.Status == "accepted") return AcceptFollowResult.AlreadyAccepted;
+            if (follow.Status == FollowStatus.Accepted) return AcceptFollowResult.AlreadyAccepted;
 
             var currentUser = await _context.Users.FindAsync(userId);
 
@@ -53,7 +53,7 @@ namespace backend.Services
                 CreatedAt = DateTime.UtcNow
             });
 
-            follow.Status = "accepted";
+            follow.Status = FollowStatus.Accepted;
             await _context.SaveChangesAsync();
             return AcceptFollowResult.Success;
         }
@@ -84,7 +84,7 @@ namespace backend.Services
         {
             return await _context.Follows
                 .AsNoTracking()
-                .Where(f => f.FollowingId == userId && f.Status == "pending")
+                .Where(f => f.FollowingId == userId && f.Status == FollowStatus.Pending)
                 .Select(f => new FollowRequestDto
                 {
                     Id = f.Id,
@@ -100,7 +100,7 @@ namespace backend.Services
         {
             return await _context.Follows
                 .AsNoTracking()
-                .Where(f => f.FollowingId == userId && f.Status == "accepted")
+                .Where(f => f.FollowingId == userId && f.Status == FollowStatus.Accepted)
                 .Select(f => new FollowerDto
                 {
                     FollowerId = f.FollowerId,
@@ -114,7 +114,7 @@ namespace backend.Services
         {
             return await _context.Follows
                 .AsNoTracking()
-                .Where(f => f.FollowerId == userId && f.Status == "accepted")
+                .Where(f => f.FollowerId == userId && f.Status == FollowStatus.Accepted)
                 .Select(f => new FollowingDto
                 {
                     FollowingId = f.FollowingId,
@@ -139,11 +139,11 @@ namespace backend.Services
                     FollowsYou = _context.Follows.Any(f =>
                         f.FollowerId == u.Id &&
                         f.FollowingId == userId &&
-                        f.Status == "accepted"),
+                        f.Status == FollowStatus.Accepted),
                     IsPending = _context.Follows.Any(f =>
                         f.FollowerId == userId &&
                         f.FollowingId == u.Id &&
-                        f.Status == "pending")
+                        f.Status == FollowStatus.Pending)
                 })
                 .ToListAsync();
         }
