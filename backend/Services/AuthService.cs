@@ -55,29 +55,8 @@ namespace backend.Services
                 return new LoginResult { Success = false };
             }
 
-            var accessToken = _tokenService.GenerateAccessToken(user);
-            var rawRefreshToken = _tokenService.GenerateRefreshToken();
-            var hashedToken = _tokenService.HashToken(rawRefreshToken);
-
-            var refreshTokenEntity = new RefreshToken
-            {
-                UserId = user.Id,
-                TokenHash = hashedToken,
-                ExpiresAt = DateTime.UtcNow.AddDays(7)
-            };
-
-            _context.RefreshTokens.Add(refreshTokenEntity);
-            await _context.SaveChangesAsync();
-
             _logger.LogInformation("User {UserId} logged in successfully", user.Id);
-
-            return new LoginResult
-            {
-                Success = true,
-                AccessToken = accessToken,
-                RawRefreshToken = rawRefreshToken,
-                RefreshTokenExpiresAt = refreshTokenEntity.ExpiresAt
-            };
+            return await IssueTokensAsync(user);
         }
 
         public async Task<RefreshResult> RefreshAsync(string? refreshTokenCookie)
@@ -137,9 +116,9 @@ namespace backend.Services
         public async Task<LoginResult> GoogleLoginAsync(string idToken)
         {
             var payload = await _tokenService.VerifyGoogleIdTokenAsync(idToken);
-            if (payload == null)
+            if (payload == null || !payload.EmailVerified)
             {
-                _logger.LogWarning("Invalid Google ID token");
+                _logger.LogWarning("Invalid or unverified Google ID token");
                 return new LoginResult { Success = false };
             }
 
@@ -166,16 +145,28 @@ namespace backend.Services
                 await _context.SaveChangesAsync();
             }
 
+            return await IssueTokensAsync(user);
+        }
+
+        // Creates a new refresh token for the user and, in the same save, removes
+        // that user's expired tokens so the table doesn't grow forever.
+        private async Task<LoginResult> IssueTokensAsync(User user)
+        {
             var accessToken = _tokenService.GenerateAccessToken(user);
             var rawRefreshToken = _tokenService.GenerateRefreshToken();
-            var hashedToken = _tokenService.HashToken(rawRefreshToken);
 
             var refreshTokenEntity = new RefreshToken
             {
                 UserId = user.Id,
-                TokenHash = hashedToken,
+                TokenHash = _tokenService.HashToken(rawRefreshToken),
                 ExpiresAt = DateTime.UtcNow.AddDays(7)
             };
+
+            var now = DateTime.UtcNow;
+            var expired = await _context.RefreshTokens
+                .Where(rt => rt.UserId == user.Id && rt.ExpiresAt < now)
+                .ToListAsync();
+            _context.RefreshTokens.RemoveRange(expired);
 
             _context.RefreshTokens.Add(refreshTokenEntity);
             await _context.SaveChangesAsync();
@@ -188,6 +179,7 @@ namespace backend.Services
                 RefreshTokenExpiresAt = refreshTokenEntity.ExpiresAt
             };
         }
+
         private async Task<string> GenerateUniqueUsernameAsync(string baseName)
         {
             var candidate = baseName.Replace(" ", "").ToLower();

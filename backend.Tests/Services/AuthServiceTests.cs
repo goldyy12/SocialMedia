@@ -345,7 +345,7 @@ namespace backend.Tests.Services
             using var context = CreateContext();
             var tokenMock = CreateTokenServiceMock();
             tokenMock.Setup(t => t.VerifyGoogleIdTokenAsync(It.IsAny<string>()))
-                .ReturnsAsync(new Google.Apis.Auth.GoogleJsonWebSignature.Payload { Email = "newgoogleuser@test.com", Name = "New User", Subject = "google-sub-123", Picture = "http://pic.jpg" });
+                .ReturnsAsync(new Google.Apis.Auth.GoogleJsonWebSignature.Payload { EmailVerified = true, Email = "newgoogleuser@test.com", Name = "New User", Subject = "google-sub-123", Picture = "http://pic.jpg" });
 
             var service = new AuthService(context, tokenMock.Object, CreateLogger());
 
@@ -366,7 +366,7 @@ namespace backend.Tests.Services
 
             var tokenMock = CreateTokenServiceMock();
             tokenMock.Setup(t => t.VerifyGoogleIdTokenAsync(It.IsAny<string>()))
-                .ReturnsAsync(new Google.Apis.Auth.GoogleJsonWebSignature.Payload { Email = "diar@test.com", Name = "Diar", Subject = "google-sub-456", Picture = "http://pic.jpg" });
+                .ReturnsAsync(new Google.Apis.Auth.GoogleJsonWebSignature.Payload { EmailVerified = true, Email = "diar@test.com", Name = "Diar", Subject = "google-sub-456", Picture = "http://pic.jpg" });
 
             var service = new AuthService(context, tokenMock.Object, CreateLogger());
 
@@ -386,7 +386,7 @@ namespace backend.Tests.Services
 
             var tokenMock = CreateTokenServiceMock();
             tokenMock.Setup(t => t.VerifyGoogleIdTokenAsync(It.IsAny<string>()))
-                .ReturnsAsync(new Google.Apis.Auth.GoogleJsonWebSignature.Payload { Email = "diar@test.com", Name = "Diar", Subject = "already-linked-sub", Picture = "http://pic.jpg" });
+                .ReturnsAsync(new Google.Apis.Auth.GoogleJsonWebSignature.Payload { EmailVerified = true, Email = "diar@test.com", Name = "Diar", Subject = "already-linked-sub", Picture = "http://pic.jpg" });
 
             var service = new AuthService(context, tokenMock.Object, CreateLogger());
 
@@ -405,7 +405,7 @@ namespace backend.Tests.Services
 
             var tokenMock = CreateTokenServiceMock();
             tokenMock.Setup(t => t.VerifyGoogleIdTokenAsync(It.IsAny<string>()))
-                .ReturnsAsync(new Google.Apis.Auth.GoogleJsonWebSignature.Payload { Email = "brandnew@test.com", Name = "New User", Subject = "google-sub-789", Picture = "http://pic.jpg" });
+                .ReturnsAsync(new Google.Apis.Auth.GoogleJsonWebSignature.Payload { EmailVerified = true, Email = "brandnew@test.com", Name = "New User", Subject = "google-sub-789", Picture = "http://pic.jpg" });
 
             var service = new AuthService(context, tokenMock.Object, CreateLogger());
 
@@ -413,6 +413,45 @@ namespace backend.Tests.Services
 
             var createdUser = await context.Users.SingleAsync(u => u.Email == "brandnew@test.com");
             Assert.Equal("newuser1", createdUser.Username); // collision resolved by appending 1
+        }
+    
+        [Fact]
+        public async Task GoogleLoginAsync_UnverifiedEmail_ReturnsFailureAndDoesNotLinkAccount()
+        {
+            using var context = CreateContext();
+            context.Users.Add(new User { Username = "victim", Email = "victim@test.com", PasswordHash = "x" });
+            await context.SaveChangesAsync();
+
+            var tokenMock = CreateTokenServiceMock();
+            tokenMock.Setup(t => t.VerifyGoogleIdTokenAsync(It.IsAny<string>()))
+                .ReturnsAsync(new GoogleJsonWebSignature.Payload { EmailVerified = false, Email = "victim@test.com", Subject = "attacker-sub" });
+
+            var service = new AuthService(context, tokenMock.Object, CreateLogger());
+            var result = await service.GoogleLoginAsync("token");
+
+            Assert.False(result.Success);
+            Assert.Null((await context.Users.SingleAsync()).GoogleId);
+        }
+
+        [Fact]
+        public async Task LoginAsync_RemovesUsersExpiredRefreshTokens()
+        {
+            using var context = CreateContext();
+            var user = new User { Username = "diar", Email = "diar@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123!") };
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+            context.RefreshTokens.Add(new RefreshToken { UserId = user.Id, TokenHash = "old-expired", ExpiresAt = DateTime.UtcNow.AddDays(-1) });
+            context.RefreshTokens.Add(new RefreshToken { UserId = user.Id, TokenHash = "still-valid", ExpiresAt = DateTime.UtcNow.AddDays(3) });
+            await context.SaveChangesAsync();
+
+            var service = new AuthService(context, CreateTokenServiceMock().Object, CreateLogger());
+            var result = await service.LoginAsync(new LoginDto { Email = "diar@test.com", Password = "Password123!" });
+
+            Assert.True(result.Success);
+            var hashes = await context.RefreshTokens.Select(rt => rt.TokenHash).ToListAsync();
+            Assert.DoesNotContain("old-expired", hashes);
+            Assert.Contains("still-valid", hashes);
+            Assert.Contains("hashed-fake-raw-refresh-token", hashes);
         }
     }
 }
