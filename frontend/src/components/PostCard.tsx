@@ -2,6 +2,7 @@ import { useState } from "react";
 import api from "../Api";
 import type { Post, Comment } from "../types/Home";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { mapCachedPosts, type PostPages } from "../hooks/usePostList";
 
 function optimizeCloudinaryUrl(url: string, width = 700, height = 394): string {
   if (!url?.includes("res.cloudinary.com")) return url;
@@ -39,8 +40,8 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
   // Apply a change to this post in every cached post list.
   const updateAllLists = (updater: (posts: Post[]) => Post[]) => {
     POST_LIST_KEYS.forEach((key) =>
-      queryClient.setQueriesData<Post[]>({ queryKey: key }, (old) =>
-        old ? updater(old) : old,
+      queryClient.setQueriesData<PostPages | Post[]>({ queryKey: key }, (old) =>
+        mapCachedPosts(old, updater),
       ),
     );
   };
@@ -66,7 +67,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
         ),
       );
       const snapshots = POST_LIST_KEYS.flatMap((key) =>
-        queryClient.getQueriesData<Post[]>({ queryKey: key }),
+        queryClient.getQueriesData<PostPages | Post[]>({ queryKey: key }),
       );
       updateAllLists(
         mapPost((p) => ({
@@ -96,7 +97,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
   });
 
   const editPostMutation = useMutation({
-    mutationFn: (content: string) => api.put(`/post/${post.id}`, { content }),
+    mutationFn: (content: string) => api.patch(`/post/${post.id}`, { content }),
     onSuccess: (response) => {
       updateAllLists(
         mapPost((p) => ({ ...p, content: response.data.content })),

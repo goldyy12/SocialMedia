@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getAccessToken, setAccessToken } from "./tokenStore";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL + "/api",
@@ -6,7 +7,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -15,7 +16,9 @@ api.interceptors.request.use((config) => {
 
 let refreshPromise: Promise<string> | null = null;
 
-async function refreshAccessToken(): Promise<string> {
+// Shared by the 401 interceptor and AuthProvider's startup check, so parallel
+// callers trigger a single /auth/refresh request (refresh tokens are single-use).
+export async function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
     refreshPromise = axios
       .post(
@@ -25,7 +28,7 @@ async function refreshAccessToken(): Promise<string> {
       )
       .then((res) => {
         const newToken = res.data.accessToken;
-        localStorage.setItem("token", newToken);
+        setAccessToken(newToken);
         return newToken;
       })
       .finally(() => {
@@ -54,7 +57,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
-        localStorage.removeItem("token");
+        setAccessToken(null);
         window.location.href = "/login";
         return Promise.reject(refreshError);
       }

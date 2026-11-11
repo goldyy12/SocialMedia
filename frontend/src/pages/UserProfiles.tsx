@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../Api";
-import type { Post } from "../types/Home";
 import { useAuth } from "../context/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import PostCard from "../components/PostCard";
+import LoadMoreButton from "../components/LoadMoreButton";
+import { usePostList } from "../hooks/usePostList";
 
 interface UserProfile {
   id: number;
@@ -13,16 +14,12 @@ interface UserProfile {
   createdAt: string;
   followersCount: number;
   followingCount: number;
+  postsCount: number;
   isFollowing: string;
 }
 
 async function fetchUserProfile(id: number): Promise<UserProfile> {
   const response = await api.get(`/user/${id}`);
-  return response.data;
-}
-
-async function fetchUserPosts(id: number): Promise<Post[]> {
-  const response = await api.get(`/post/user/${id}`);
   return response.data;
 }
 
@@ -50,11 +47,17 @@ export default function UserProfile() {
     enabled: !!numericId,
   });
 
-  const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
-    queryKey: ["userPosts", numericId],
-    queryFn: () => fetchUserPosts(numericId),
-    enabled: !!numericId,
-  });
+  const {
+    posts,
+    isLoading: postsLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = usePostList(
+    ["userPosts", numericId],
+    `/post/user/${numericId}`,
+    !!numericId,
+  );
 
   const { mutate: toggleFollow, isPending } = useMutation({
     mutationFn: () =>
@@ -128,7 +131,8 @@ export default function UserProfile() {
                 following
               </span>
               <span>
-                <strong className="text-ink-deep">{posts.length}</strong> posts
+                <strong className="text-ink-deep">{profile.postsCount}</strong>{" "}
+                posts
               </span>
             </div>
           </div>
@@ -148,6 +152,11 @@ export default function UserProfile() {
           />
         ))
       )}
+      <LoadMoreButton
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onClick={() => fetchNextPage()}
+      />
     </div>
   );
 }

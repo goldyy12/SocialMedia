@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../Api";
-import type { Post } from "../types/Home";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../context/useAuth";
 import type { SearchUser, Friend } from "../types/UserProfile";
 import PostCard from "../components/PostCard";
+import LoadMoreButton from "../components/LoadMoreButton";
+import { usePostList, type PostPages } from "../hooks/usePostList";
 
-async function fetchPosts(): Promise<Post[]> {
-  const response = await api.get("/post");
-  return response.data;
-}
 async function searchUsers(query: string): Promise<SearchUser[]> {
   const response = await api.get(`/user/search?query=${query}`);
   return response.data;
@@ -31,13 +28,13 @@ export default function Home() {
   }, [searchQuery]);
 
   const {
-    data: posts = [],
+    posts,
     isLoading,
     isError,
-  } = useQuery<Post[]>({
-    queryKey: ["posts"],
-    queryFn: fetchPosts,
-  });
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = usePostList(["posts"], "/post");
 
   const addPostMutation = useMutation({
     mutationFn: async () => {
@@ -49,10 +46,17 @@ export default function Home() {
     },
     onSuccess: (response) => {
       const newPost = { ...response.data, comments: [] };
-      queryClient.setQueryData<Post[]>(["posts"], (prev = []) => [
-        newPost,
-        ...prev,
-      ]);
+      queryClient.setQueryData<PostPages>(["posts"], (prev) =>
+        prev
+          ? {
+              ...prev,
+              pages: [
+                [newPost, ...(prev.pages[0] ?? [])],
+                ...prev.pages.slice(1),
+              ],
+            }
+          : prev,
+      );
       setContent("");
       setImageFile(null);
       setImagePreview(null);
@@ -154,7 +158,9 @@ export default function Home() {
         )}
 
         {posts.length === 0 ? (
-          <p className="text-steel">No posts yet. Be the first to share something.</p>
+          <p className="text-steel">
+            No posts yet. Be the first to share something.
+          </p>
         ) : (
           posts.map((post) => (
             <PostCard
@@ -165,6 +171,11 @@ export default function Home() {
             />
           ))
         )}
+        <LoadMoreButton
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onClick={() => fetchNextPage()}
+        />
       </div>
 
       <aside className="hidden w-80 shrink-0 lg:block">

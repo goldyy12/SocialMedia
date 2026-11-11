@@ -1,9 +1,10 @@
 import api from "../Api";
-import type { Post } from "../types/Home";
 import { useAuth } from "../context/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import PostCard from "../components/PostCard";
+import LoadMoreButton from "../components/LoadMoreButton";
+import { usePostList } from "../hooks/usePostList";
 
 interface UserProfile {
   id: number;
@@ -13,15 +14,11 @@ interface UserProfile {
   createdAt: string;
   followersCount: number;
   followingCount: number;
+  postsCount: number;
 }
 
 async function fetchUserProfile(id: number): Promise<UserProfile> {
   const response = await api.get(`/user/${id}`);
-  return response.data;
-}
-
-async function fetchUserPosts(id: number): Promise<Post[]> {
-  const response = await api.get(`/post/user/${id}`);
   return response.data;
 }
 
@@ -45,11 +42,13 @@ export default function Profile() {
     enabled: !!id,
   });
 
-  const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
-    queryKey: ["userPosts", id],
-    queryFn: () => fetchUserPosts(id!),
-    enabled: !!id,
-  });
+  const {
+    posts,
+    isLoading: postsLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = usePostList(["userPosts", id], `/post/user/${id}`, !!id);
 
   async function uploadImage(file: File): Promise<string> {
     const formData = new FormData();
@@ -161,7 +160,10 @@ export default function Profile() {
                 <strong className="text-ink-deep">
                   {profile.followersCount}
                 </strong>{" "}
-                <a href="/followers" className="underline-offset-2 hover:underline">
+                <a
+                  href="/followers"
+                  className="underline-offset-2 hover:underline"
+                >
                   followers
                 </a>
               </span>
@@ -169,12 +171,16 @@ export default function Profile() {
                 <strong className="text-ink-deep">
                   {profile.followingCount}
                 </strong>{" "}
-                <a href="/following" className="underline-offset-2 hover:underline">
+                <a
+                  href="/following"
+                  className="underline-offset-2 hover:underline"
+                >
                   following
                 </a>
               </span>
               <span>
-                <strong className="text-ink-deep">{posts.length}</strong> posts
+                <strong className="text-ink-deep">{profile.postsCount}</strong>{" "}
+                posts
               </span>
             </div>
           </div>
@@ -194,6 +200,11 @@ export default function Profile() {
           />
         ))
       )}
+      <LoadMoreButton
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onClick={() => fetchNextPage()}
+      />
     </div>
   );
 }

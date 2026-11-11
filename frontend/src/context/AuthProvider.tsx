@@ -4,29 +4,16 @@ import axios from "axios";
 
 import { AuthContext } from "./AuthContext.js";
 import type { AuthContextType, DecodedToken, User } from "../types/Auth.ts";
+import { refreshAccessToken } from "../Api";
+import { setAccessToken } from "../tokenStore";
 
-function getUserFromToken() {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-
-  try {
-    const decoded: DecodedToken = jwtDecode(token);
-    const currentTime = Date.now() / 1000;
-
-    if (decoded.exp < currentTime) {
-      localStorage.removeItem("token");
-      return null;
-    }
-
-    return {
-      userId: decoded.userId,
-      username: decoded.username,
-      email: decoded.email,
-    };
-  } catch (error) {
-    console.error("Failed to decode token:", error);
-    return null;
-  }
+function userFromToken(token: string): User {
+  const decoded: DecodedToken = jwtDecode(token);
+  return {
+    userId: decoded.userId,
+    username: decoded.username,
+    email: decoded.email,
+  };
 }
 
 export default function AuthProvider({
@@ -34,44 +21,24 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<User | null>(getUserFromToken);
-  const [loading, setLoading] = useState<boolean>(() => !getUserFromToken());
+  const [user, setUser] = useState<User | null>(null);
+  // The access token is kept in memory only, so on every page load we ask the
+  // server for a fresh one using the httpOnly refresh cookie.
+  const [loading, setLoading] = useState<boolean>(true);
 
   const login = (token: string) => {
-    localStorage.setItem("token", token);
-    const decoded: DecodedToken = jwtDecode(token);
-    setUser({
-      userId: decoded.userId,
-      username: decoded.username,
-      email: decoded.email,
-    });
+    setAccessToken(token);
+    setUser(userFromToken(token));
   };
 
   useEffect(() => {
-    if (!user) {
-      axios
-        .post(
-          `${import.meta.env.VITE_API_URL}/api/auth/refresh`,
-          {},
-          { withCredentials: true },
-        )
-        .then((res) => {
-          const decoded: DecodedToken = jwtDecode(res.data.accessToken);
-          localStorage.setItem("token", res.data.accessToken);
-          setUser({
-            userId: decoded.userId,
-            username: decoded.username,
-            email: decoded.email,
-          });
-        })
-        .catch((error) => {
-          console.error("Failed to refresh token:", error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-    // no else branch needed — if user exists, loading was already initialized to false
+    refreshAccessToken()
+      .then((token) => setUser(userFromToken(token)))
+      .catch(() => {
+        // No valid refresh cookie — the user simply isn't logged in.
+        setAccessToken(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const logout = async () => {
@@ -84,7 +51,7 @@ export default function AuthProvider({
     } catch (error) {
       console.error("Logout request failed:", error);
     } finally {
-      localStorage.removeItem("token");
+      setAccessToken(null);
       setUser(null);
     }
   };
