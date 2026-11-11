@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../Api";
+import { getAccessToken } from "../tokenStore";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/useAuth";
 import * as signalR from "@microsoft/signalr";
@@ -103,7 +104,7 @@ export default function Messages() {
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${import.meta.env.VITE_API_URL}/hubs/chat`, {
-        accessTokenFactory: () => localStorage.getItem("token") ?? "",
+        accessTokenFactory: () => getAccessToken() ?? "",
       })
       .withAutomaticReconnect()
       .build();
@@ -125,12 +126,13 @@ export default function Messages() {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     });
 
-    connection.start().then(() => {
-      connection.invoke("JoinPersonalGroup", user.userId.toString());
-    });
+    // The server adds this connection to the signed-in user's group itself,
+    // based on the JWT — the client no longer says which user it is.
+    connection
+      .start()
+      .catch((err) => console.error("SignalR connection failed:", err));
 
     return () => {
-      connection.invoke("LeavePersonalGroup", user.userId.toString());
       connection.stop();
     };
   }, [user?.userId]);

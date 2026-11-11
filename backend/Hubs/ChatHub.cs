@@ -1,19 +1,26 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System.Threading.Tasks;
+﻿using backend.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace backend.Hubs
 {
+    // Only authenticated users may connect. Each connection is placed in a group
+    // named after the user id taken from the validated JWT — never from client
+    // input — so a user can only ever receive their own messages.
+    [Authorize]
     public class ChatHub : Hub
     {
-        // When a client connects, place them in a personal group using their UserId string
-        public async Task JoinPersonalGroup(string userId)
+        public override async Task OnConnectedAsync()
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, userId);
-        }
+            var userId = Context.User?.GetCurrentUserId();
+            if (userId == null)
+            {
+                Context.Abort();
+                return;
+            }
 
-        public async Task LeavePersonalGroup(string userId)
-        {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, userId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, userId.Value.ToString());
+            await base.OnConnectedAsync();
         }
     }
 }
